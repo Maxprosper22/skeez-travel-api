@@ -13,8 +13,9 @@ async def home(request: Request):
     try:
         app = request.app
         template = app.ctx.TemplateEnv.get_template('home.html')
+        render = template.render()
 
-        return sanhtml(template.render())
+        return sanhtml(render)
 
     except Exception as e:
         print(traceback.format_exc(e))
