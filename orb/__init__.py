@@ -19,7 +19,7 @@ def create_app() -> Sanic:
     # try:
 
     app = Sanic("Orb")
-    app.static('/static', 'orb/assets')
+    app.static('/static', './assets')
 
     # app.config.templating_enable_async = True
     # app.config.templating_path_to_templates = 'orb/templates/'
