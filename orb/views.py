@@ -5,14 +5,20 @@ import traceback
 
 async def index(request: Request):
     """ Index route handler """
+    try:
+        app = request.app
+        template = app.ctx.TemplateEnv.get_template('index.html')
+        render = template.render()
 
-    return santext('Index page')
+        return sanhtml(render)
+    except Exception as e:
+        print(traceback.format_exc(e))
 
 async def home(request: Request):
     """ Home route handler """
     try:
         app = request.app
-        template = app.ctx.TemplateEnv.get_template('home.html')
+        template = app.ctx.TemplateEnv.get_template('market.html')
         render = template.render()
 
         return sanhtml(render)

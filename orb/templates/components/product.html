@@ -1,0 +1,60 @@
+{% macro Product(product) %}
+<div class="flex flex-col justify-start items-center w-full my-5 bg-sky-500 rounded">
+  <!-- <div class="flex justify-center items-center w-full h-32"> -->
+    <div class="w-full max-w-xl overflow-hidden relative">
+    <!-- Slideshow container -->
+    <div class="flex transition-transform duration-500 ease-in-out" id="{{product}}">
+      <!-- Slide 1 -->
+      <div class="w-full flex-shrink-0">
+        <img src="https://via.placeholder.com/800x400/3498db/ffffff?text=Slide+1" alt="Slide 1" class="w-full">
+      </div>
+      <!-- Slide 2 -->
+      <div class="w-full flex-shrink-0">
+        <img src="https://via.placeholder.com/800x400/2ecc71/ffffff?text=Slide+2" alt="Slide 2" class="w-full">
+      </div>
+      <!-- Slide 3 -->
+      <div class="w-full flex-shrink-0">
+        <img src="https://via.placeholder.com/800x400/e74c3c/ffffff?text=Slide+3" alt="Slide 3" class="w-full">
+      </div>
+    </div>
+
+    <!-- Navigation buttons -->
+    <button id="prev" class="absolute top-1/2 left-0 transform -translate-y-1/2 text-white text-3xl px-4 py-2 bg-gray-800 bg-opacity-50 hover:bg-opacity-75">
+      &lt;
+    </button>
+    <button id="next" class="absolute top-1/2 right-0 transform -translate-y-1/2 text-white text-3xl px-4 py-2 bg-gray-800 bg-opacity-50 hover:bg-opacity-75">
+      &gt;
+    </button>
+  <!-- </div> -->
+
+  </div>
+  <div class="flex flex-col justify-center items-center w-full h-24">
+    <h4>Sleepover at Polly Pocket's Compact</h4>
+    <p class="">Hosted by Polly Pocket</p>
+    <p class="">
+      <h5>$89</h5>
+      <p class="">per guest</p>
+    </p>
+  </div>
+  <script>
+    const {{product}} = document.getElementById("{{product}}");
+    const {{product}}Slides = {{product}}.children.length;
+    let {{product}}CurrentIndex = 0;
+
+    function showSlide(index) {
+    {{product}}.style.transform = `translateX(${-index * 100}%)`;
+    }
+
+    document.getElementById('prev').addEventListener('click', () => {
+      {{product}}CurrentIndex = ({{product}}CurrentIndex > 0) ? {{product}}CurrentIndex - 1 : {{product}}Slides - 1;
+      showSlide({{product}}CurrentIndex);
+    });
+
+    document.getElementById('next').addEventListener('click', () => {
+      {{product}}CurrentIndex = ({{product}}CurrentIndex < {{product}}Slides - 1) ? {{product}}CurrentIndex + 1 : 0;
+      showSlide({{product}}CurrentIndex);
+    });
+  </script>
+
+</div>
+{% endmacro %}
