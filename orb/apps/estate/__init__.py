@@ -7,7 +7,7 @@ from .urls import setupUrls
 async def main(app: Sanic) -> Blueprint:
     """ Estate application """
 
-    estateApp = Blueprint('estate', url_prefix='estate')
+    estateApp = Blueprint('estate', url_prefix='estate', host="estate.orb.com")
 
     estateApp.static('/static.estate', 'orb/apps/estate/assets/')
 
