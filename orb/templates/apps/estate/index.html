@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "components/product.html" import Product %}
+{% block title %}Home{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col justify-start items-center w-full h-[84vh]">
+  <!-- <div class="flex flex-row justify-start items-center w-full h-20 text-white overflow-x-scroll scrollbar-hide"> -->
+  <!--   <div class="flex justify-center items-center my-auto mx-4 py-2 px-5 border border-white-500 rounded-full"> -->
+  <!--     <p>Hello</p> -->
+  <!--   </div> -->
+  <!--   <div class="flex justify-center items-center my-auto mx-4 py-2 px-5 border border-white rounded-full">Hello</div> -->
+  <!--   <div class="flex justify-center items-center my-auto mx-4 py-2 px-5 border border-white rounded-full">Hello</div> -->
+  <!--   <div class="flex justify-center items-center my-auto mx-4 py-2 px-5 border border-white rounded-full">Hello</div> -->
+  <!--   <div class="flex justify-center items-center my-auto mx-4 py-2 px-5 border border-white rounded-full">Hello</div> -->
+  <!-- </div> -->
+
+  <div class="flex flex-col justify-start items-center h-[100%] w-full my-auto px-6 overflow-y-scroll scrollbar-hide">
+    <!-- Use the card carousel macro -->
+    {{ Product('carousel1', [
+      'https://via.placeholder.com/800x400/3498db/ffffff?text=Slide+1',
+      'https://via.placeholder.com/800x400/2ecc71/ffffff?text=Slide+2',
+      'https://via.placeholder.com/800x400/e74c3c/ffffff?text=Slide+3'
+    ]) }}
+    {{ Product('carousel2', [
+      'https://via.placeholder.com/800x400/3498db/ffffff?text=Slide+1',
+      'https://via.placeholder.com/800x400/2ecc71/ffffff?text=Slide+2',
+      'https://via.placeholder.com/800x400/e74c3c/ffffff?text=Slide+3'
+    ]) }}
+    {{ Product('carousel3', [
+      'https://via.placeholder.com/800x400/3498db/ffffff?text=Slide+1',
+      'https://via.placeholder.com/800x400/2ecc71/ffffff?text=Slide+2',
+      'https://via.placeholder.com/800x400/e74c3c/ffffff?text=Slide+3'
+    ]) }}
+    {{ Product('carousel4', [
+      'https://via.placeholder.com/800x400/3498db/ffffff?text=Slide+1',
+      'https://via.placeholder.com/800x400/2ecc71/ffffff?text=Slide+2',
+      'https://via.placeholder.com/800x400/e74c3c/ffffff?text=Slide+3'
+    ]) }}
+    {{ Product('carousel5', [
+      'https://via.placeholder.com/800x400/3498db/ffffff?text=Slide+1',
+      'https://via.placeholder.com/800x400/2ecc71/ffffff?text=Slide+2',
+      'https://via.placeholder.com/800x400/e74c3c/ffffff?text=Slide+3'
+    ]) }}
+    {{ Product('carousel6', [
+      'https://via.placeholder.com/800x400/3498db/ffffff?text=Slide+1',
+      'https://via.placeholder.com/800x400/2ecc71/ffffff?text=Slide+2',
+      'https://via.placeholder.com/800x400/e74c3c/ffffff?text=Slide+3'
+    ]) }}
+    {{ Product('carousel7', [
+      'https://via.placeholder.com/800x400/3498db/ffffff?text=Slide+1',
+      'https://via.placeholder.com/800x400/2ecc71/ffffff?text=Slide+2',
+      'https://via.placeholder.com/800x400/e74c3c/ffffff?text=Slide+3'
+    ]) }}
+  </div>
+</div>
+{% endblock %}

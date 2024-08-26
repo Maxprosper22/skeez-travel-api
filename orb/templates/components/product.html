@@ -1,60 +1,61 @@
-{% macro Product(product) %}
-<div class="flex flex-col justify-start items-center w-full my-5 bg-sky-500 rounded">
-  <!-- <div class="flex justify-center items-center w-full h-32"> -->
-    <div class="w-full max-w-xl overflow-hidden relative">
-    <!-- Slideshow container -->
-    <div class="flex transition-transform duration-500 ease-in-out" id="{{product}}">
-      <!-- Slide 1 -->
-      <div class="w-full flex-shrink-0">
-        <img src="https://via.placeholder.com/800x400/3498db/ffffff?text=Slide+1" alt="Slide 1" class="w-full">
+{% macro Product(id, images) %}
+  <div class="p-6 max-w-xl w-full rounded-lg shadow-lg">
+    <div class="w-full overflow-hidden relative rounded">
+      <!-- Slideshow container -->
+      <div class="flex transition-transform duration-500 ease-in-out" id="{{ id }}">
+        {% for image in images %}
+        <!-- Slide -->
+        <div class="w-full flex-shrink-0">
+          <img src="{{ image }}" alt="Slide" class="w-full">
+        </div>
+        {% endfor %}
       </div>
-      <!-- Slide 2 -->
-      <div class="w-full flex-shrink-0">
-        <img src="https://via.placeholder.com/800x400/2ecc71/ffffff?text=Slide+2" alt="Slide 2" class="w-full">
-      </div>
-      <!-- Slide 3 -->
-      <div class="w-full flex-shrink-0">
-        <img src="https://via.placeholder.com/800x400/e74c3c/ffffff?text=Slide+3" alt="Slide 3" class="w-full">
-      </div>
+
+      <!-- Navigation buttons -->
+      <button class="absolute top-1/2 left-0 transform -translate-y-1/2 text-white text-3xl bg-gray-800 bg-opacity-50 hover:bg-opacity-75 rounded-full" onclick="prevSlide('{{ id }}')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 9-3 3m0 0 3 3m-3-3h7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+      </button>
+      <button class="absolute top-1/2 right-0 transform -translate-y-1/2 text-white text-3xl bg-gray-800 bg-opacity-50 hover:bg-opacity-75 rounded-full" onclick="nextSlide('{{ id }}')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+     </button>
     </div>
-
-    <!-- Navigation buttons -->
-    <button id="prev" class="absolute top-1/2 left-0 transform -translate-y-1/2 text-white text-3xl px-4 py-2 bg-gray-800 bg-opacity-50 hover:bg-opacity-75">
-      &lt;
-    </button>
-    <button id="next" class="absolute top-1/2 right-0 transform -translate-y-1/2 text-white text-3xl px-4 py-2 bg-gray-800 bg-opacity-50 hover:bg-opacity-75">
-      &gt;
-    </button>
-  <!-- </div> -->
-
   </div>
-  <div class="flex flex-col justify-center items-center w-full h-24">
-    <h4>Sleepover at Polly Pocket's Compact</h4>
-    <p class="">Hosted by Polly Pocket</p>
-    <p class="">
-      <h5>$89</h5>
-      <p class="">per guest</p>
-    </p>
-  </div>
+
   <script>
-    const {{product}} = document.getElementById("{{product}}");
-    const {{product}}Slides = {{product}}.children.length;
-    let {{product}}CurrentIndex = 0;
+    const {{id}}slideshows = {};
 
-    function showSlide(index) {
-    {{product}}.style.transform = `translateX(${-index * 100}%)`;
+    function initSlideshow(id) {
+      const slideshow = document.getElementById(id);
+      const slides = slideshow.children.length;
+      {{id}}slideshows[id] = { element: slideshow, slides: slides, index: 0 };
     }
 
-    document.getElementById('prev').addEventListener('click', () => {
-      {{product}}CurrentIndex = ({{product}}CurrentIndex > 0) ? {{product}}CurrentIndex - 1 : {{product}}Slides - 1;
-      showSlide({{product}}CurrentIndex);
-    });
+    function showSlide(id, index) {
+      const slideshow = {{id}}slideshows[id];
+      slideshow.index = index;
+      slideshow.element.style.transform = `translateX(${-index * 100}%)`;
+    }
 
-    document.getElementById('next').addEventListener('click', () => {
-      {{product}}CurrentIndex = ({{product}}CurrentIndex < {{product}}Slides - 1) ? {{product}}CurrentIndex + 1 : 0;
-      showSlide({{product}}CurrentIndex);
+    function prevSlide(id) {
+      const slideshow = {{id}}slideshows[id];
+      const newIndex = (slideshow.index > 0) ? slideshow.index - 1 : slideshow.slides - 1;
+      showSlide(id, newIndex);
+    }
+
+    function nextSlide(id) {
+      const slideshow = {{id}}slideshows[id];
+      const newIndex = (slideshow.index < slideshow.slides - 1) ? slideshow.index + 1 : 0;
+      showSlide(id, newIndex);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      {% for image in images %}
+        initSlideshow("{{ id }}");
+      {% endfor %}
     });
   </script>
-
-</div>
 {% endmacro %}

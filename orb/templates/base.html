@@ -1,5 +1,5 @@
 {% from "components/tabs.html" import BottomTab %}
-{% from "components/nav.html" import TopNav %}
+{% from "components/status.html" import StatusBar %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -10,8 +10,8 @@
     {% block head %}
     {% endblock %}
   </head>
-  <body class="flex flex-col justify-center items-center bg-gray-50 dark:bg-slate-900 text-black w-full h-screen">
-    {{ TopNav() }}
+  <body class="flex flex-col justify-center items-center bg-gray-50 dark:bg-gray-900 text-black w-full h-screen scrollbar-hide">
+    {{ StatusBar() }}
     {% block content %}
     {% endblock %}
     {{ BottomTab() }}

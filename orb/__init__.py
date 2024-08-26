@@ -3,13 +3,14 @@ from dotenv import load_dotenv
 from sanic import Sanic
 
 from orb.utils.env_to_toml import interpolate_env_vars
-from orb.utils.setup_db import db_conn, db_pool, setupDB
-# from orb.utils.setup_config import setupConfig
-from orb.utils.setup_templating import setupTemplating
-from orb.utils.setup_urls import setupUrls
 
-# from orb.urls import load_url
-# from orb.views import index, home
+from orb.db import db_conn, db_pool
+# from orb.config import setupConfig
+from orb.templating import setupTemplating
+from orb.keys import setupECDSA_Keys
+from orb.urls import setup_urls
+
+from orb.registry import register_apps
 
 load_dotenv()
 
@@ -38,9 +39,6 @@ def create_app() -> Sanic:
         dsn = await db_conn(config=config['database'])
         app.ctx.pool = await db_pool(dsn, loop)
 
-        # Setup database tables
-        await setupDB(app)
-
         # app.ctx.pwd_security = PasswordSecurity()
 
         # Define template object
@@ -50,8 +48,10 @@ def create_app() -> Sanic:
         # await setupECDSA_Keys(app)
 
         # Setup application routing
-        await setupUrls(app)
-        # await load_url(app)
+        await setup_urls(app)
+
+        # Register applications
+        await register_apps(app)
 
     # app.register_listener(applicationSetup, 'before_server_start')
 

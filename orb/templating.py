@@ -1,5 +1,5 @@
 from sanic import Sanic
-from jinja2 import Environment, PackageLoader, FileSystemLoader
+from jinja2 import Environment, PackageLoader
 
 async def setupTemplating(app: Sanic) -> None:
     """ Create and load templating environment """
