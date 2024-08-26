@@ -10,10 +10,11 @@
     {% block head %}
     {% endblock %}
   </head>
-  <body class="flex flex-col justify-center items-center bg-gray-50 dark:bg-gray-900 text-black w-full h-screen scrollbar-hide">
+  <body class="flex flex-col justify-center items-center bg-gray-50 dark:bg-gray-900 text-black w-full h-[100vh] scrollbar-hide relative">
     {{ StatusBar() }}
-    {% block content %}
-    {% endblock %}
+    <div class="flex flex-col justify-center items-center w-full h-[84vh] m-auto fixed">
+    {% block content %}{% endblock %}
+    </div>
     {{ BottomTab() }}
   </body>
 </html>
