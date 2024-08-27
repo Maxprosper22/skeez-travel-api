@@ -25,3 +25,15 @@ async def home(request: Request):
 
     except Exception as e:
         print(traceback.format_exc(e))
+
+async def timeline(request: Request):
+    app = request.app
+
+    return santext("Hello, fetch your timeline here")
+
+async def post(request: Request, postid):
+    app = request.app
+    template = app.ctx.TemplateEnv.get_template('thread.html')
+    render = template.render()
+
+    return sanhtml(render)
