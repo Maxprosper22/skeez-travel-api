@@ -6,9 +6,7 @@ class PostCard extends HTMLElement {
     const shadow = this.attachShadow({ mode: 'open' })
   }
 
-  async connectedCallback() {
-    const fetch_template = await fetch('/static/scripts/components/templates/template.html')
-  }
+  async connectedCallback() {}
   disconnectedCallback() {}
   adoptedCallback() {}
   attributeChangedCallback(property, oldValue, newValue) {
