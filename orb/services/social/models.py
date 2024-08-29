@@ -9,7 +9,7 @@ class Post(BaseModel):
     pid: UUID = uuid4()
     uid: UUID
     content: str = ''
-    media: Optional[Media]    # An array of urls ()
+    media: Optional[]    # An array of urls ()
     quote: Optional[UUID]   # Quoted post ID (One-to-one relationship)
     date: datetime = datetime.now()
 
