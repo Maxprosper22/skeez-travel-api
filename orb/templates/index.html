@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% from "components/post.html" import Post %}
+{% from "components/post-template.html" import PostTemplate %}
+
 {% block title %}Home{% endblock %}
 
 {% block head %}{% endblock %}
@@ -20,7 +22,12 @@
     {% for i in range(10) %}
       {{ Post() }}
     {% endfor %}
-    <post-card></post-card>
+    <!-- <post-card></post-card> -->
   </div>
-  {% include 'components/post-card-template.html' %}
+  {{ PostTemplate() }}
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/static/scripts/post-card.js"></script>
+<script type="module" src="/static/scripts/index.js"></script>
 {% endblock %}

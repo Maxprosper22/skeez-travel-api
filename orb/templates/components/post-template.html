@@ -1,4 +1,5 @@
-<template id="post-card-template">
+{% macro PostTemplate() %}
+<template id="post-template">
   <div class="flex flex-col justify-center items-center w-full h-fit dark:text-gray-300 px-4 relative">
     <!-- Post Header -->
     <div class="flex flex-row justify-between items-center h-[4rem] w-full px-2">
@@ -86,3 +87,4 @@
     <!-- </div> -->
   </div>
 </template>
+{% endmacro %}
