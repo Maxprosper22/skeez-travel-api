@@ -5,17 +5,16 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}{% endblock %}</title>
+    <title></title>
     <link href="/static/css/output.css" rel="stylesheet">
-    {% block head %}
-    {% endblock %}
+    <link href="/static/libraries/quill/quill.css" rel="stylesheet">
   </head>
-  <body class="flex flex-col justify-center items-center bg-gray-50 dark:bg-gray-900 text-black w-full h-[100vh] scrollbar-hide relative">
+  <body class="flex flex-col justify-center items-center bg-gray-50 dark:bg-gray-900 text-black w-full h-[100vh] scrollbar-hide relative divide-y dark:divide-y dark:divide-gray-600">
     {{ StatusBar() }}
-    <div class="flex flex-col justify-center items-center w-full h-[84vh] m-auto fixed">
-    {% block content %}{% endblock %}
-    </div>
+    <div id="content" class="flex flex-col justify-center items-center w-full h-[84vh] m-auto fixed"></div>
     {{ BottomTab() }}
-    {% block footer %}{% endblock %}
-  </body>
+    <script type="module" src="/static/librarires/pagejs/page.js"></script>
+    <script type="module" src="/static/libraries/quill/quill.js"></script>
+    <script type="module" src="/static/scripts/base.js"></script>
+ </body>
 </html>
