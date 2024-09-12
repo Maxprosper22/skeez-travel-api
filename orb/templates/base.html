@@ -5,16 +5,23 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title></title>
+    <title>{% block title %}{% endblock %}</title>
     <link href="/static/css/output.css" rel="stylesheet">
-    <link href="/static/libraries/quill/quill.css" rel="stylesheet">
+    <link rel="stylesheet" type="css" href="/static/libraries/ckeditor/style.css"
+    {% block head %}
+    {% endblock %}
   </head>
   <body class="flex flex-col justify-center items-center bg-gray-50 dark:bg-gray-900 text-black w-full h-[100vh] scrollbar-hide relative divide-y dark:divide-y dark:divide-gray-600">
     {{ StatusBar() }}
-    <div id="content" class="flex flex-col justify-center items-center w-full h-[84vh] m-auto fixed"></div>
+    
+    {% block content %}{% endblock %}
+
+    {% block templates %}{% endblock %}
+
     {{ BottomTab() }}
-    <script type="module" src="/static/librarires/pagejs/page.js"></script>
-    <script type="module" src="/static/libraries/quill/quill.js"></script>
-    <script type="module" src="/static/scripts/base.js"></script>
- </body>
+
+    {% block scripts %}{% endblock %}
+    <script src="/static/libraries/tinymce.min.js"></script>
+    <script src="/static/scripts/base.js"></script>
+  </body>
 </html>

@@ -25,3 +25,24 @@ async def post(request: Request, postid):
     render = template.render()
 
     return sanhtml(render)
+
+
+async def createpost(request: Request):
+    app = request.app
+
+    return santext('Create new posts here.')
+
+async def notifications_handler(request: Request):
+    app =request.app
+    
+    return santext('Manage notifications over ere.')
+
+async def chats_handler(request: Request):
+    app = request.app
+
+    return santext('Chat with your contacts here')
+
+async def profile_handler(request: Request):
+    app = request.app
+
+    return santext('Here you manage your account info')

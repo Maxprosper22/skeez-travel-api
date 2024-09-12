@@ -4,13 +4,13 @@ class PostCard extends HTMLElement {
   constructor() {
     super()
     const shadow = this.attachShadow({ mode: 'open' })
+    const template = document.getElementById('#post-template').content.cloneNode(true)
+
+    shadow.appendChild(template)
   }
 
   async connectedCallback() {
 
-    const template = document.getElementById('#template').content.cloneNode(true)
-
-    shadow.append(template)
   }
   disconnectedCallback() {}
   adoptedCallback() {}

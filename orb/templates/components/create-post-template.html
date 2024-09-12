@@ -1,0 +1,9 @@
+{% macro CreatePostTemplate() %}
+<div id="create-post" class="flex flex-col justify-center items-center w-full h-screen bg-gray-100 dark:bg-gray-900 dark:bg-opacity-30 absolute z-30">
+  <!-- <div id="back-drop" class="flex flex-col justify-center items-center w-full h-[50%] bg-gray-100 border dark:border-green-900 fixed z-30 "></div>  -->
+  <div id="box" class="flex flex-col justify-center items-center w-full h-full px-4 fixed z-40 bg-white dark:bg-gray-900 divide-y dark:divide-gray-900">
+    <h2>Create Post</h2>
+    <textarea id="editor-container" class="w-full h-28 border dark:border-green-900"></textarea>  
+  </div>
+</div>
+{% endmacro %}

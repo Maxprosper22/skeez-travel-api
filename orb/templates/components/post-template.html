@@ -11,14 +11,14 @@
           <div class="flex flex-col justify-center items-center h-full">
             <div class="flex flex-row justify-between items-center font-bold text-sm">
               <span>
-                <slot name="firstname">John</slot>
+                <slot name="firstname"></slot>
               </span>
               <span>
-                <slot name="lastname">Doe</slot>
+                <slot name="lastname"></slot>
               </span>
             </div>
             <span class="text-sm text-gray-500">
-              <slot name="username">@johndoe123</slot>
+              <slot name="username"></slot>
             </span>
           </div>
           <span class="text-sm text-gray-500">·</span>
@@ -37,7 +37,7 @@
     <!-- Post Content -->
     <div class="flex flex-col justify-around items-center w-full h-[20rem] max-h-[20rem] m-auto p-2 space-y-3">
       <p class="flex flex-row justify-center text-sm">
-        <slot name="content">This is an example of a Twitter post component. You can add your content here.</slot>
+        <slot name="content"></slot>
       </p>
       <div class="flex justify-center items-center w-full h-full border dark:border-gray-50 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-100">
         <slot name="media"></slot>
