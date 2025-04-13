@@ -1,0 +1,28 @@
+{
+  "name": "orb",
+  "version": "1.0.0",
+  "main": "tailwind.config.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Maxprosper22/orb.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Maxprosper22/orb/issues"
+  },
+  "homepage": "https://github.com/Maxprosper22/orb#readme",
+  "description": "",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.3",
+    "animejs": "^4.0.1",
+    "tailwindcss": "^4.1.3"
+  }
+}

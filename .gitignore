@@ -169,4 +169,4 @@ cython_debug/
 # Ignore dynaconf secret files
 .secrets.*
 
-
+node_modules/
