@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+{% from "main/components/tabs.html" import BottomTab %}
+{% from "main/components/status.html" import StatusBar %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %}</title>
+    <link href="/static/css/output.css" rel="stylesheet">
+    <link rel="stylesheet" type="css" href="/static/toastify.css">
+    {% block head %}{% endblock %}
+    <script src="/static/libraries/htmx.min.js"></script>
+    <script type="module" src="/static/libraries/htmx-ws.js"></script>
+  </head>
+  <body class="flex flex-col justify-center items-center bg-base-700 dark:bg-neutral-950 text-black dark:text-white w-screen h-screen scrollbar-hide relative divide-y dark:divide-y dark:divide-gray-600 relative">
+    
+    {% block content %}{% endblock %}
+
+    {% block templates %}{% endblock %}
+
+    {% block scripts %}{% endblock %}
+    
+    <script type="text/javascript" src="/static/js/base.js"></script>
+    <script type="text/javascript" src="/static/js/toastify.js"></script>
+  </body>
+</html>

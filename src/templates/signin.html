@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Auth | Sign in{% endblock %}
+{% block head %}{% endblock %}
+{% block content %}
+<div class="flex flex-col justify-center items-center w-full h-full">
+  <form method="post" action="account/auth/signin">
+    <input type="email" name="email" value="" placeholder="Email">
+    <input type="password" name="password" value="" placeholder="Password">
+    <input type="submit" value="Sign in">
+  </form>
+  <div class="flex justify-center items-center w-full">
+    <span>Don't have an account?</span>
+    <a href="/account/auth/signup">Sign up</a>
+  </div>
+</div>
+{% endblock %}
+{% block template %}{% endblock %}
+{% block scripts %}{% endblock %}

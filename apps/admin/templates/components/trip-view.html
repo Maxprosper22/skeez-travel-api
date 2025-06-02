@@ -1,0 +1,186 @@
+{% macro TripTemplate(trip) %}
+<template id="trip-template">
+  <div id="trip-preview" class="flex flex-col items">
+    <div class="flex justify-between items-center w-full">
+      <span id="preview-id" class="text-xs text-grey">Trip ID</span>
+      <span id="preview-status">Trip Status</span>
+    </div>
+
+    <!-- Details -->
+    <div class="flex justify-evenly items-center w-full">
+      <!-- Destination -->
+      <div class="flex flex-col justify-center items-center">
+        <h3 class="text-lg font-bold">Destination</h3>
+        <span id="preview-destination">_</span>
+      </div>
+      <!-- Date -->
+      <div class="flex flex-col justify-center items-center">
+        <h3 class="text-lg font-bold">Date</h3>
+        <span id="preview-date">_</span>
+      </div>
+
+      <!-- Capacity -->
+      <div class="flex flex-col justify-center items-center">
+        <h3 class="text-lg font-bold">Capacity</h3>
+        <span id="preview-capacity">_</span>
+      </div>
+    </div>
+    
+    <!-- Admin Actions -->
+    <div class="flex justify-between items-center w-full">
+      <button class="btn btn-primary">Edit</button>
+    </div>
+  </div>
+
+  <div id="trip-main-view" class="hidden grid-cols-4 grid-rows-5 gird-flow-row bg-base-100 shadow-sm w-full snap-center mx-3 p-3 gap-3 rounded-lg">
+
+    <div class="col-span-4 w-full p-3 gap-3 rounded-lg border border-base-300">
+      <div class="flex flex-1 justify-between items-center w-full gap-3">
+        <h2 id="view-id" class="text-xl">_</h2>
+        <div class="badge badge-info dark:bg-neutral-950 shadow-sm">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            filnaml="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+            />
+            <path 
+              stroke-linecap="round" 
+              stroke-linejoin="round"
+              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+            />
+          </svg>
+          <span id="view-status">_</span>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="col-span-4 row-span-2 grid grid-rows-2grid grid-cols-3 w-full gap-6">
+        <div class="flex flex-col justify-around items-center h-full overflow-hidden rounded-lg shadow-sm dark:shadow-lg dark:shadow-gray-300 border">
+          <div class="flex flex-1 justify-center items-center w-full gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-6">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+              />
+              <path 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+                d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+              />
+            </svg>
+            <h3 class="flex justify-center items-center h-full text-2xlg">Destination</h3>
+          </div>
+          <span id="view-destination" class="flex flex-1 justify-center items-center w-full text-lg">_</span>
+        </div>
+        <div class="flex flex-col justify-around items-center h-full overflow-hidden rounded-lg shadow-sm dark:shadow-lg dark:shadow-gray-300 border">
+          <div class="flex flex-1 justify-center items-center w-full gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-6">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+              />
+            </svg>
+            <h3 class="flex justify-center items-center h-full text-2xlg">Date</h3>
+          </div>
+          <span id="view-date" class="flex flex-1 justify-center items-center w-full text-lg">_</span>
+        </div>
+        <div class="flex flex-col justify-around items-center h-full overflow-hidden rounded-lg shadow-sm dark:shadow-lg dark:shadow-gray-300 border">
+          <div
+            class="flex flex-1 justify-center items-center w-full gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-6">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+              />
+            </svg>
+            <h3 class="flex justify-center items-center h-full text-2xlg">Date</h3>
+          </div>
+          <span id="view-eta" class="flex flex-1 justify-center items-center w-full text-lg">_</span>
+        </div>
+    </div>
+    <!-- </div> -->
+
+    <div class="col-span-5 grid auto-cols-max grid-flow-col gap-5 text-center border">
+      <div class="flex flex-col border">
+        <span class="countdown font-mono text-5xl">
+          <span style="--value:15;" aria-live="polite" aria-label="15">15</span>
+        </span>
+        days
+      </div>
+      <div class="flex flex-col border">
+        <span class="countdown font-mono text-5xl">
+          <span style="--value:10;" aria-live="polite" aria-label="10">10</span>
+        </span>
+        hours
+      </div>
+      <div class="flex flex-col border">
+        <span class="countdown font-mono text-5xl">
+          <span style="--value:24;" aria-live="polite" aria-label="24">24</span>
+        </span>
+        min
+      </div>
+      <div class="flex flex-col border">
+        <span class="countdown font-mono text-5xl">
+          <span style="--value:59;" aria-live="polite" aria-label="59">59</span>
+        </span>
+        sec
+      </div>
+    </div>
+
+    <div class="col-span-4 flex justify-center items-center">
+      <div class="stats shadow">
+        <div class="stat place-items-center">
+          <div class="stat-title">Passengers</div>
+          <div id="view-passenger" class="stat-value">_</div>
+        <!-- <div class="stat-desc">Registered passengers</div> -->
+        </div>
+
+        <div class="stat place-items-center">
+          <div class="stat-title">Capacity</div>
+          <div id="view-capacity" class="stat-value text-secondary">_</div>
+          <!-- <div class="stat-desc text-secondary">Vehicle capacuty</div> -->
+        </div>
+
+        <div class="stat place-items-center">
+          <div class="stat-title">Slots</div>
+          <div id="view-slots" class="stat-value">_</div>
+          <!-- <div class="stat-desc">Free seats</div> -->
+        </div>
+      </div>
+    </div>
+
+    <div class="col-span-4 flex justify-end items-center px-3 border">
+      <button class="btn btn-primary">Watch</button>
+    </div>
+  </div>
+  
+</template>
+{% endmacro %}

@@ -1,0 +1,119 @@
+{% extends "main/base.html" %}
+
+{% from "admin/components/navbar.html" import NavBar %}
+{% from "admin/components/destinations.html" import DestinationPreview %}
+{% from "admin/components/trip-view.html" import TripTemplate %}
+{% from "admin/components/new-trip-modal.html" import NewTripModal %}
+
+{% block title %}Trip Board{% endblock %}
+
+{% block head %}
+<!-- <script src="/admin/static/js/trip-board.js"></script> -->
+<script src="/admin/static/js/components/trip-view.js"></script>
+<!-- <script src="/admin/static/js/components/new-trip.js"></script> -->
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col justify-start items-center w-full h-screen gap-6 overflow-y-auto relative">
+  {{ NavBar() }}
+
+  <div class="card card-side w-19/20 shadow-sm">
+    <div class="flex justify-center items-center px-10 rounded shadow-sm dark:shadow-cyan-500/50">
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        fill="none" 
+        viewBox="0 0 24 24" 
+        stroke-width="1.5" 
+        stroke="currentColor" 
+        class="size-16">
+        <path 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+      </svg>
+    </div>
+    <div class="card-body items-center text-center gap-3">
+      <h1 class="card-title self-baseline text-2xl">Trip Board</h1>
+      <p></p>
+      <div class="card-actions justify-start items-center w-full">
+        <div
+          id="new-trip-btn"
+          class="btn btn-lg btn-primary"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          New
+        </div>
+        <button class="btn btn-lg rounded">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+            />
+            <path 
+              stroke-linecap="round" 
+              stroke-linejoin="round"
+              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+            />
+          </svg>
+          Destinations
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col justify-center items-center w-full px-3">
+    <h1 class="self-baseline ml-3 text-2xl">Destinations</h1>
+    <div class="flex justify-start items-center w-full overflow-x-scroll snap-x snap-mandatory snap-proximity py-6">
+    {% for i in range(4) %}
+      {{ DestinationPreview('destination') }}
+    {% endfor %} 
+    </div>
+  </div>
+
+  <div id="trip-container" class="flex flex-col justify-center items-center w-full px-3">
+    <h1 class="self-baseline ml-3 text-2xl">Trips</h1>
+    <div class="flex flex-col sm:flex-row sm:flex-wrap justify-start items-center w-full px-3 py-6 gap-6">
+    {% if trips %}
+    {% for trip in trips %}
+      <admin-trip-view
+        id="{{trip.trip_id}}"
+        destination="{{trip.destination}}"
+        capacity="{{trip.capacity}}"
+        slots="{{trip.slots}}"
+        date="{{trip.date}}"
+        eta="{{trip.eta}}"
+      ></admin-trip-view>
+    {% endfor %}
+    {% else %}
+      <span>No trip found</span>
+    {% endif %}
+    </div>
+  </div>
+  {{ NewTripModal(trip_status) }}
+  <!-- <trip-form></trip-form> -->
+</div>
+{% endblock %}
+{% block templates %}
+{% endblock %}
+{% block scripts %}
+<script type="module" src="/admin/static/js/admin.js"></script>
+<script src="/admin/static/js/trip-board.js"></script>
+{% endblock %}

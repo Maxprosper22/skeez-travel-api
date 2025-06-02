@@ -1,0 +1,31 @@
+{% macro DestinationPreview(destination) %}
+<div class="card card-side bg-base-100 shadow-sm min-w-108 snap-center mx-3">
+  <figure class="flex justify-center items-center m-3 px-10 rounded dark:bg-neutral-950 shadow-sm dark:shadow-sm dark:shadow-cyan-500/50">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="size-16">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+      />
+      <path 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+        d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+      />
+    </svg>
+  </figure>
+  <div class="card-body">
+    <h2 class="card-title">New movie is released!</h2>
+    <p>Click the button to watch on Jetflix app.</p>
+    <div class="card-actions justify-end">
+      <button class="btn btn-primary">Watch</button>
+    </div>
+  </div>
+</div>
+{% endmacro %}
