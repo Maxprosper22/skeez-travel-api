@@ -1,13 +1,17 @@
-async def create_trip_success(**context):
+async def create_trip_success_signal(**context):
     """
         Signal dispatched when a new trip is created successfully
+        Function:
+            Send trip to the client
         Arguments (context):
             ws: type-Websocket; desc - Websocket connection;
             trip_id: type-UUID; desc - ID of newly created trip
             app: Sanic app context
+            pool: Database connection
     """
     print(context)
-
+    # Send Email notification
+    # Send push notifications
     ws.send()
 
 async def create_trip_failure(**context):
@@ -19,7 +23,7 @@ async def create_trip_failure(**context):
     """
     print(context)
 
-async def trip_status_update(**context):
+async def trip__update_signal(**context):
     """
         Signals a changes to the status field of a trip
         Arguments (context):
