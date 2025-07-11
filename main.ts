@@ -1,6 +1,7 @@
-console.log("OS", Deno.build.os)
+async function reqHandler(req: Request) {
+  const reqPath = new URL(req.url).pathname;
+  return await fetch("http://127.0.0.1:8080" + reqPath, { headers: req.headers });
+}
 
-const command = new Deno.Command("sanic", {
-  args: ["src.main:create_app", "-p 8080", "-R src", "--dev"],
-});
-const process = command.spawn();
+Deno.serve(reqHandler);
+

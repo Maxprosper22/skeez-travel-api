@@ -1,7 +1,8 @@
 from sanic import Sanic
 
-from apps.trip import setup_trip_app
-from apps.admin import setup_admin_app
+from src.blueprints.account import setup_accounts
+from src.blueprints.trip import setup_trip_app
+from src.blueprints.admin import setup_admin_app
 
 async def register_apps(app: Sanic) -> None:
     """
@@ -12,4 +13,5 @@ async def register_apps(app: Sanic) -> None:
     admin_app = await setup_admin_app(app)
     app.blueprint(admin_app)
     
+    await setup_accounts(app)
     await setup_trip_app(app)

@@ -5,12 +5,14 @@ from dynaconf import Dynaconf
 async def db_conn(config: Dynaconf) -> str:
     """ Initialize database connection """
 
-    DB_USER = config.DB_USER
-    DB_PASS = config.DB_PASSWORD
-    DB_HOST = config.DB_HOST
-    DB_PORT = config.DB_PORT
-    DB_NAME = config.DB_NAME
-    DB_PASSWORD = config.DB_PASSWORD
+    # print(f"DB config: {config}")
+
+    DB_USER = config["DB_USER"]
+    DB_PASS = config["DB_PASSWORD"]
+    DB_HOST = config["DB_HOST"]
+    DB_PORT = config["DB_PORT"]
+    DB_NAME = config["DB_NAME"]
+    DB_PASSWORD = config["DB_PASSWORD"]
     
     dsn = f"postgres://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     return dsn

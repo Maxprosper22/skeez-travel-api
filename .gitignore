@@ -1,3 +1,5 @@
+src/services/scurity/certificates/
+
 # Configuration
 **/config.toml
 **/settings.toml

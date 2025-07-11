@@ -1,14 +1,20 @@
 from dotenv import load_dotenv
 from sanic import Sanic
-import toml, os
+import toml
+import os
 
 from src.utils.db import db_conn, db_pool
-from config import settings
 from src.utils.templating import setupTemplating
-# from orb.utils.keys import setupECDSA_Keys
-from src.utils.registry import register_apps
+
+from src.services import register_services
+from src.blueprints import register_apps
+# from src.blueprints.account.controller import AccountController
+
+from src.services.mail import load_mail_config
 
 from src.routes import setup_urls
+
+import pprint
 
 load_dotenv()
 
@@ -21,43 +27,60 @@ def load_config(file_path):
     except toml.TomlDecodeError:
         raise Exception(f"Invalid TOML format in {file_path}")
 
+async def load_database_config(config):
+    """ Load database config. Dependent on tye environment """
+    env = config.get('app')["ENV"]
+    match env:
+        case "dev":
+            # Load database config and add the password from environment
+            db_config = config.get("dev", {})['database']
+            db_config["DB_PASSWORD"] = os.getenv("DEV_DB_PASSWORD")  # Get password from env
+            if not db_config["DB_PASSWORD"]:
+                raise ValueError("DB_PASSWORD environment variable is not set")
+
+            return db_config
+        case "prod":
+            # Load database config and add the password from environment
+            db_config = config.get("prod", {})['database']
+            db_config["DB_PASSWORD"] = os.getenv("DB_PASSWORD")  # Get password from env
+            if not db_config["DB_PASSWORD"]:
+                raise ValueError("DB_PASSWORD environment variable is not set")
+
+            return db_config
+        
+
 def create_app() -> Sanic:
     """" Application factory """
 
-    # try:
-
     app = Sanic("Skrid")
     app.static("/static", "./src/assets")
-
-    # app.config.templating_enable_async = True
-    # app.config.templating_path_to_templates = 'orb/templates/'
     
     @app.listener("before_server_start")
-    async def applicationSetup(app, loop):
+    async def application_setup(app, loop):
         """ Server setup """
         
         # Apply the configuration to the Sanic app
         config = load_config("config.toml")
-        app.config.update(config.get("app", {}))  # Update with 'app' section
-        
-        # Load database config and add the password from environment
-        db_config = config.get("database", {})
-        db_config["DB_PASSWORD"] = os.getenv("DB_PASSWORD")  # Get password from env
-        if not db_config["DB_PASSWORD"]:
-            raise ValueError("DB_PASSWORD environment variable is not set")
-        app.config.update(db_config)
+        # pprint.pp(config)
+
+        # Update with 'app' section
+        app.config.update(config)
+        # pprint.pp(app.config)
+
+        db_config = await load_database_config(config)
 
         # Setup database connection
-        dsn = await db_conn(config=app.config)
+        dsn = await db_conn(config=db_config)
         app.ctx.pool = await db_pool(dsn, loop)
 
-        # app.ctx.pwd_security = PasswordSecurity()
+        # Load email config
+        app.ctx.mailConfig = await load_mail_config(config)
 
-        # Define template object
+        # Set up templating
         app.ctx.template_env = await setupTemplating(app)
 
         # Setup ECDSA keys
-        # await setupECDSA_Keys(app)
+        await register_services(app)
 
         # Setup application routing
         await setup_urls(app)
@@ -66,12 +89,7 @@ def create_app() -> Sanic:
         await register_apps(app)
 
 
-    # app.register_listener(applicationSetup, 'before_server_start')
-
     return app
-
-# app.add_route(index, '/', methods=['GET'])
-# app.add_route(home, '/home', methods=['GET'])
 
 # if __name__ == "__main__":
     # app.run()

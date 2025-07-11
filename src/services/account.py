@@ -1,0 +1,155 @@
+from typing import Optional
+from pydantic import BaseModel, Field, EmailStr
+from pydantic_extra_types.phone_numbers import PhoneNumber
+from uuid import UUID, uuid4
+from asyncpg import Pool
+from datetime import datetime
+
+from src.models.account import Account
+from src.models.admin import Admin
+
+class AccountService(BaseModel):
+    accounts: Optional[list[Account]] = []
+    
+    @classmethod
+    async def create_table(cls, pool: Pool) -> None:
+        """ Creates account table if it does not exist """
+        try:
+            async with pool.acquire() as conn:
+                await conn.execute("""
+                    CREATE TABLE IF NOT EXISTS accounts ( 
+                        account_id UUID PRIMARY KEY,
+                        email TEXT UNIQUE NOT NULL,
+                        phone_number VARCHAR(20) NOT NULL,
+                        password TEXT NOT NULL,
+                        join_date TIMESTAMP NOT NULL,
+                        is_admin BOOLEAN NOT NULL
+                    )
+                """)
+
+        except Exception as e:
+            raise e
+
+    @classmethod
+    async def create_account(cls, pool: Pool, account: Account) -> Optional[Account]:
+        """ Create new account """
+
+        async with pool.acquire() as conn:
+            await conn.execute("""
+                INSERT INTO accounts (
+                    account_id, email, phone_number, password, join_date, is_admin
+                ) VALUES (
+                    $1, $2, $3, $4, $5, $6
+                ) RETURNING *""",
+                account.account_id,
+                account.email,
+                account.phone_number,
+                account.password,
+                account.join_date,
+                account.is_admin
+            )
+
+            account_record = await conn.fetchrow("""
+                SELECT * FROM accounts INNER JOIN accounts acct ON admin adm WHERE account_id=$1 
+            """, account.account_id)
+
+        if not account_record:
+            return None
+
+        new_account_dict = dict(account_record)
+        new_account = Account(
+            account_id=new_account_dict["account_id"],
+            email=new_account_dict["email"],
+            phone_number=new_account_dict["phone_number"],
+            password=new_account_dict["password"],
+            join_date=new_account_dict["join_date"],
+            is_admin=new_account_dict["is_admin"],
+            admin=Admin(
+                admin_id=new_account_dict["admin_id"],
+                account_id=new_account_dict["account_id"],
+                roles=new_account_dict["roles"],
+                date=new_account_dict["date"]
+            )
+        )
+        
+        cls.accounts.append(new_account)
+
+        return new_account
+
+    @classmethod
+    async def fetch_user(cls, pool: Pool, accountid: UUID) -> Optional[Account]:
+        """ Fetch user for self.accounts """
+    
+        match cls.accounts:
+            case [Account(account_id=account_id) as account]:
+                print(account)
+
+                return account
+
+            case _:
+                async with pool.acquire() as conn:
+                    account_record = await conn.execute("""
+                        SELECT * FROM accounts INNER JOIN accounts acct ON admin adm WHERE account_id = $1
+                    """, accountid)
+
+                if not account_record:
+                    return None
+                
+                account_dict = dict(account_record)
+                # accout_dict.pop("password")
+
+                account = Account(
+                    account_id=account_dict["account_id"],
+                    email=account_dict["email"],
+                    phone_number=account_dict["phone_number"],
+                    password=account_dict["password"],
+                    join_date=account_dict["join_date"],
+                    is_admin=account_dict["is_admin"],
+                    admin=Admin(
+                        admin_id=account_dict["admin_id"],
+                        account_id=account_dict["account_id"],
+                        roles=account_dict["roles"],
+                        date=account_dict["date"]
+                    )
+                )
+        
+                return account
+
+    @classmethod
+    async def populate_accounts(cls, pool: Pool):
+        """ 
+            Retrieve account data from database. Runs on server startup.
+        """
+
+        try:
+            async with pool.acquire() as conn:
+                account_records = await conn.fetch("""SELECT * FROM accounts LEFT JOIN admin adm ON accounts.account_id = adm.account_id LEFT JOIN tickets tkt ON accounts.account_id = tkt.account_id """)
+
+            print(f"Account records: {account_records}; type {type(account_records)}")
+            if not account_records:
+                return
+
+            accounts_dict = dict(account_records)
+            pprint.pp(accounts_dict)
+            for account_record in accounts_dict:
+                account = Account(
+                    account_id=account_record["account_id"],
+                    email=account_record["email"],
+                    phone_number=account_record["phone_number"],
+                    password=account_record["password"],
+                    join_date=account_record["join_date"],
+                    is_admin=account_record["is_admin"],
+                    admin=Admin(
+                        admin_id=accounts_dict["admin_id"],
+                        account_id=accounts_dict["account_id"],
+                        role=accounts_dict["role"],
+                        date=accounts_dict["date"]
+                    )
+                    # trips=[Trip(trip_id=trip["trip_id"], destination=) for trip in accounts_dict["trips"]]# trips=accounts_dict[]
+                )
+                cls.accounts.append(account)
+
+            # return account_records
+
+        except Exception as e:
+            raise e
