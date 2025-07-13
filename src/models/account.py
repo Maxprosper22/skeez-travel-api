@@ -13,6 +13,9 @@ class Account(BaseModel):
     email: EmailStr
     phone_number: PhoneNumber
     password: str
+    firstname: str
+    lastname: str
+    othername: Optional[str]
     join_date: datetime = Field(default_factory=datetime.now())
     is_admin: bool = False
     admin: Optional[Admin]

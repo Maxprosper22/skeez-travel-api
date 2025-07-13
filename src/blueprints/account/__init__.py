@@ -1,16 +1,12 @@
-from sanic import Sanic
+from sanic import Sanic, Blueprint
+from .urls import router
 
 async def setup_accounts(app: Sanic):
     """ Set up account management """
 
-    # app.ctx.AccountModel = Account
-    # app.ctx.accountCtx = {
-    #     "accountModel": Account,
-    #     "accountController": AccountController()
-    # }
-
-    # Create new accounts table if it doesn't exist
-    # await app.ctx.accountCtx["accountController"].create_table(pool=app.ctx.pool)
+    account_bp = Blueprint("admin", url_prefix="/account")
+    account_bp.static('/static', 'src/blueprints/account/assets')
     
-    # Retrieve and populate Accounts array of the AccountController
-    # await app.ctx.accountCtx["accountController"].populate_accounts(app.ctx.pool)
+    await router(account_bp)
+
+    return account_bp

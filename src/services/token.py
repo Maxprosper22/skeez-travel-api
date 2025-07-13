@@ -44,8 +44,8 @@ class TokenService:
                 'type': token.token_type
             }
             token_str = jwt.encode(payload, key, algorithm="ES256K")
-            await cls.store_token(pool, token)
-            
+            # Functionality to store token moved up
+
             return token_str
 
         except Exception as e:

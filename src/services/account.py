@@ -22,6 +22,9 @@ class AccountService(BaseModel):
                         email TEXT UNIQUE NOT NULL,
                         phone_number VARCHAR(20) NOT NULL,
                         password TEXT NOT NULL,
+                        firstname TEXT NOT NULL,
+                        lastname TEXT NOT NULL,
+                        othername TEXT,
                         join_date TIMESTAMP NOT NULL,
                         is_admin BOOLEAN NOT NULL
                     )
@@ -37,14 +40,17 @@ class AccountService(BaseModel):
         async with pool.acquire() as conn:
             await conn.execute("""
                 INSERT INTO accounts (
-                    account_id, email, phone_number, password, join_date, is_admin
+                    account_id, email, phone_number, password, firstname, lastname, othername, join_date, is_admin
                 ) VALUES (
-                    $1, $2, $3, $4, $5, $6
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9
                 ) RETURNING *""",
                 account.account_id,
                 account.email,
                 account.phone_number,
                 account.password,
+                account.firstname,
+                account.lastname,
+                account.othername,
                 account.join_date,
                 account.is_admin
             )
@@ -58,17 +64,20 @@ class AccountService(BaseModel):
 
         new_account_dict = dict(account_record)
         new_account = Account(
-            account_id=new_account_dict["account_id"],
-            email=new_account_dict["email"],
-            phone_number=new_account_dict["phone_number"],
-            password=new_account_dict["password"],
-            join_date=new_account_dict["join_date"],
-            is_admin=new_account_dict["is_admin"],
-            admin=Admin(
-                admin_id=new_account_dict["admin_id"],
-                account_id=new_account_dict["account_id"],
-                roles=new_account_dict["roles"],
-                date=new_account_dict["date"]
+            account_id = new_account_dict["account_id"],
+            email = new_account_dict["email"],
+            phone_number = new_account_dict["phone_number"],
+            password = new_account_dict["password"],
+            firstname = new_account_dict["firstname"],
+            lastname = new_account_dict["lastname"],
+            othername = new_account_dict["othername"],
+            join_date = new_account_dict["join_date"],
+            is_admin = new_account_dict["is_admin"],
+            admin = Admin(
+                admin_id = new_account_dict["admin_id"],
+                account_id = new_account_dict["account_id"],
+                rolesv= new_account_dict["roles"],
+                date = new_account_dict["date"]
             )
         )
         
@@ -99,17 +108,20 @@ class AccountService(BaseModel):
                 # accout_dict.pop("password")
 
                 account = Account(
-                    account_id=account_dict["account_id"],
-                    email=account_dict["email"],
-                    phone_number=account_dict["phone_number"],
-                    password=account_dict["password"],
-                    join_date=account_dict["join_date"],
-                    is_admin=account_dict["is_admin"],
-                    admin=Admin(
-                        admin_id=account_dict["admin_id"],
-                        account_id=account_dict["account_id"],
-                        roles=account_dict["roles"],
-                        date=account_dict["date"]
+                    account_id = account_dict["account_id"],
+                    email = account_dict["email"],
+                    phone_number = account_dict["phone_number"],
+                    passwordb= account_dict["password"],
+                    firstname = account_dict["firstname"],
+                    lastname = account_dict["lastname"],
+                    othername = account_dict["othername"],
+                    join_date = account_dict["join_date"],
+                    is_admin = account_dict["is_admin"],
+                    admin = Admin(
+                        admin_id = account_dict["admin_id"],
+                        account_id = account_dict["account_id"],
+                        roles = account_dict["roles"],
+                        date = account_dict["date"]
                     )
                 )
         
@@ -133,19 +145,22 @@ class AccountService(BaseModel):
             pprint.pp(accounts_dict)
             for account_record in accounts_dict:
                 account = Account(
-                    account_id=account_record["account_id"],
-                    email=account_record["email"],
-                    phone_number=account_record["phone_number"],
-                    password=account_record["password"],
-                    join_date=account_record["join_date"],
-                    is_admin=account_record["is_admin"],
-                    admin=Admin(
-                        admin_id=accounts_dict["admin_id"],
-                        account_id=accounts_dict["account_id"],
-                        role=accounts_dict["role"],
-                        date=accounts_dict["date"]
-                    )
-                    # trips=[Trip(trip_id=trip["trip_id"], destination=) for trip in accounts_dict["trips"]]# trips=accounts_dict[]
+                    account_id = account_dict["account_id"],
+                    email = account_dict["email"],
+                    phone_number = account_dict["phone_number"],
+                    password = account_dict["password"],
+                    firstname = account_dict["firstname"],
+                    lastname = account_dict["lastname"],
+                    othername = account_dict["othername"],
+                    join_date = account_dict["join_date"],
+                    is_admin = account_dict["is_admin"],
+                    admin = Admin(
+                        admin_id = accounts_dict["admin_id"],
+                        account_id = accounts_dict["account_id"],
+                        role = accounts_dict["role"],
+                        date = accounts_dict["date"]
+                    ),
+                    trips=[Trip(trip_id=trip["trip_id"], destination=trip["destination"], capacity=trip["capacity"], status=trip["status"], date=trip["date"]) for trip in accounts_dict["trips"]]
                 )
                 cls.accounts.append(account)
 

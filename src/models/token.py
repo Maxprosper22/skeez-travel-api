@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 
 class TokenType(Enum):
-    LOGIN = "auth"
+    AUTH = "auth"
     RESET = "reset"
 
 class Token(BaseModel):
