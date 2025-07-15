@@ -2,12 +2,10 @@ from sanic import Sanic, Blueprint
 
 from .urls import router
 
-async def setup_trip_app(app: Sanic):
+async def setup_trip_app(app: Sanic) -> Blueprint:
     """ Set up trip application """
     
+    trip_bp = Blueprint("trip", url_prefix="/trip")
     await router(app)  # Set up routing
-    # await register_trip_ctx(app)
-
-    # Instantiate trip manager
-    # app.ctx.TripManager.
-
+    
+    return trip_bp

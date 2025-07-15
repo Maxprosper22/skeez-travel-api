@@ -1,5 +1,5 @@
 from asyncpg.connection import traceback
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from uuid import UUID, uuid4
 from asyncpg import Pool
 from abc import ABC, abstractmethod
@@ -9,12 +9,12 @@ from datetime import datetime
 from orb.views import post
 
 class Post(BaseModel):
-    pid: UUID = uuid4()
+    pid: UUID = Field(default_factory=lambda _: uuid4()
     uid: UUID
     content: str = ''
-    media: Optional[List[UUID]]    # An array of urls ()
-    quote: Optional[UUID]   # Quoted post ID (One-to-one relationship)
-    date: datetime = datetime.now()
+    media: Optional[List[UUID]] = None   # An array of urls ()
+    quote: Optional[UUID] = None   # Quoted post ID (One-to-one relationship)
+                      date: datetime = Field(default_factory=lambda _: datetime.now())
 
 class PostRepository(ABC):
 

@@ -9,16 +9,16 @@ from .admin import Admin
 from .trip import Trip, TripStatus
 
 class Account(BaseModel):
-    account_id: UUID = Field(default_factory=uuid4())
+    account_id: UUID = Field(default_factory=lambda _: uuid4())
     email: EmailStr
     phone_number: PhoneNumber
     password: str
     firstname: str
     lastname: str
-    othername: Optional[str]
-    join_date: datetime = Field(default_factory=datetime.now())
+    othername: Optional[str] = None
+    join_date: datetime = Field(default_factory=lambda _: datetime.now())
     is_admin: bool = False
-    admin: Optional[Admin]
-    trips: Optional[Trip]
+    admin: Optional[Admin] = None
+    trips: Optional[Trip] = None
 
 

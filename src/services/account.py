@@ -7,6 +7,7 @@ from datetime import datetime
 
 from src.models.account import Account
 from src.models.admin import Admin
+import pprint
 
 class AccountService(BaseModel):
     accounts: Optional[list[Account]] = []
@@ -20,7 +21,7 @@ class AccountService(BaseModel):
                     CREATE TABLE IF NOT EXISTS accounts ( 
                         account_id UUID PRIMARY KEY,
                         email TEXT UNIQUE NOT NULL,
-                        phone_number VARCHAR(20) NOT NULL,
+                        phone_number VARCHAR(30) NOT NULL,
                         password TEXT NOT NULL,
                         firstname TEXT NOT NULL,
                         lastname TEXT NOT NULL,
@@ -36,54 +37,31 @@ class AccountService(BaseModel):
     @classmethod
     async def create_account(cls, pool: Pool, account: Account) -> Optional[Account]:
         """ Create new account """
-
-        async with pool.acquire() as conn:
-            await conn.execute("""
-                INSERT INTO accounts (
-                    account_id, email, phone_number, password, firstname, lastname, othername, join_date, is_admin
-                ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9
-                ) RETURNING *""",
-                account.account_id,
-                account.email,
-                account.phone_number,
-                account.password,
-                account.firstname,
-                account.lastname,
-                account.othername,
-                account.join_date,
-                account.is_admin
-            )
-
-            account_record = await conn.fetchrow("""
-                SELECT * FROM accounts INNER JOIN accounts acct ON admin adm WHERE account_id=$1 
-            """, account.account_id)
-
-        if not account_record:
-            return None
-
-        new_account_dict = dict(account_record)
-        new_account = Account(
-            account_id = new_account_dict["account_id"],
-            email = new_account_dict["email"],
-            phone_number = new_account_dict["phone_number"],
-            password = new_account_dict["password"],
-            firstname = new_account_dict["firstname"],
-            lastname = new_account_dict["lastname"],
-            othername = new_account_dict["othername"],
-            join_date = new_account_dict["join_date"],
-            is_admin = new_account_dict["is_admin"],
-            admin = Admin(
-                admin_id = new_account_dict["admin_id"],
-                account_id = new_account_dict["account_id"],
-                rolesv= new_account_dict["roles"],
-                date = new_account_dict["date"]
-            )
-        )
         
-        cls.accounts.append(new_account)
+        try:
+            async with pool.acquire() as conn:
+                await conn.execute("""
+                    INSERT INTO accounts (
+                        account_id, email, phone_number, password, firstname, lastname, othername, join_date, is_admin
+                    ) VALUES (
+                        $1, $2, $3, $4, $5, $6, $7, $8, $9
+                    ) RETURNING *""",
+                    account.account_id,
+                    account.email,
+                    account.phone_number,
+                    account.password,
+                    account.firstname,
+                    account.lastname,
+                    account.othername,
+                    account.join_date,
+                    account.is_admin
+                )
+    
+            return True
 
-        return new_account
+        except Exception as e:
+            pprint.pp(f"An error occurred during account creation: {e}")
+            return False
 
     @classmethod
     async def fetch_user(cls, pool: Pool, accountid: UUID) -> Optional[Account]:
@@ -135,11 +113,16 @@ class AccountService(BaseModel):
 
         try:
             async with pool.acquire() as conn:
-                account_records = await conn.fetch("""SELECT * FROM accounts LEFT JOIN admin adm ON accounts.account_id = adm.account_id LEFT JOIN tickets tkt ON accounts.account_id = tkt.account_id """)
+                account_records = await conn.fetch("""
+                    SELECT * FROM accounts 
+                    LEFT JOIN admin adm ON accounts.account_id = adm.account_id 
+                    LEFT JOIN tickets tkt ON accounts.account_id = tkt.account_id
+                """)
 
             print(f"Account records: {account_records}; type {type(account_records)}")
+            
             if not account_records:
-                return
+                return None
 
             accounts_dict = dict(account_records)
             pprint.pp(accounts_dict)

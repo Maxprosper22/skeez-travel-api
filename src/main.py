@@ -8,11 +8,10 @@ from src.utils.templating import setupTemplating
 
 from src.services import register_services
 from src.blueprints import register_apps
-# from src.blueprints.account.controller import AccountController
 
 from src.services.mail import load_mail_config
 
-from src.routes import setup_urls
+# from src.routes import setup_urls
 
 import pprint
 
@@ -83,7 +82,7 @@ def create_app() -> Sanic:
         await register_services(app)
 
         # Setup application routing
-        await setup_urls(app)
+        # await setup_urls(app)
 
         # Register applications
         await register_apps(app)

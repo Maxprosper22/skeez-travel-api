@@ -10,13 +10,13 @@ class TokenType(Enum):
     RESET = "reset"
 
 class Token(BaseModel):
-    token_id: UUID = Field(default_factory=uuid4())
+    token_id: UUID = Field(default_factory=lambda _: uuid4())
     account_id: UUID
     valid: bool
-    issue_date: datetime = Field(default_factory=datetime.now())
-    expiry: datetime = Field(default_factory=datetime.now() + timedelta(minutes=2))
+    issue_date: datetime = Field(default_factory=lambda _: datetime.now())
+    expiry: datetime = Field(default_factory=lambda _: datetime.now() + timedelta(minutes=2))
     token_type: TokenType
-    signature: Optional[str]
+    signature: Optional[str] = None
 
 
 

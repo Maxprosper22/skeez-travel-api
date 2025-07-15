@@ -9,7 +9,7 @@ from .middleware import authorize
 async def setup_admin_app(app: Sanic) -> None:
     """ Set up admin application """
 
-    await create_table(app.ctx.pool)
+    # await create_table(app.ctx.pool)
 
     admin_bp = Blueprint("admin", url_prefix="/admin")
     admin_bp.static('/static', './apps/admin/assets')

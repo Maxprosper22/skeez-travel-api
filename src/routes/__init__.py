@@ -12,12 +12,12 @@ async def setup_urls(app: Sanic):
         None
     """
 
-    app.add_route(index, '/', methods=['GET'])
-    app.add_route(dashboard, '/dashboard', methods=['GET', 'POST'])
-    app.add_route(destinations_handler, '/destinations', methods=['GET'])
+    # app.add_route(index, '/', methods=['GET'])
+    # app.add_route(dashboard, '/dashboard', methods=['GET', 'POST'])
+    # app.add_route(destinations_handler, '/destinations', methods=['GET'])
     # app.add_route(booking_handler, '/book', methods=["GET", "POST"])
-    app.add_route(notifications_handler, '/notifications', methods=['GET', 'POST'])
-    app.add_route(account_handler, '/account', methods=['GET', 'POST'])
-    app.add_route(signin, '/account/auth/signin', methods=['GET', 'POST'])
-    app.add_route(signup, '/account/auth/signup', methods=['GET', 'POST'])
+    # app.add_route(notifications_handler, '/notifications', methods=['GET', 'POST'])
+    # app.add_route(account_handler, '/account', methods=['GET', 'POST'])
+    # app.add_route(signin, '/account/auth/signin', methods=['GET', 'POST'])
+    # app.add_route(signup, '/account/auth/signup', methods=['GET', 'POST'])
     # app.add_route(admin, '/admin', methods=['GET', 'POST'])

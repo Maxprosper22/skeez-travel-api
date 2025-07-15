@@ -3,6 +3,7 @@ from sanic.request import Request
 from sanic.response import html as sanhtml, json as sanjson
 
 from uuid import UUID
+import pprint, traceback
 
 async def account_info(request: Request, account_id: str) -> sanjson:
     """ Retrieve account information """
@@ -47,12 +48,21 @@ async def signin(request: Request):
     try:
         app = request.app
         pool = app.ctx.pool
+        pvkey = app.ctx.pvkey
+
         accountCtx = app.ctx.accountCtx
         Account = accountCtx["Account"]
         accountService = accountCtx["AccountService"]
+
         passwordService = app.ctx.PasswordService
 
+        tokenCtx = app.ctx.tokenCtx
+        Token = tokenCtx["Token"]
+        tokenType = tokenCtx["TokenType"]
+        tokenService = tokenCtx["TokenService"]
+
         auth_data = request.json
+        pprint.pp(auth_data)
 
         match auth_data:
             case None:
@@ -72,7 +82,7 @@ async def signin(request: Request):
 
                 match accountService.accounts:
                     case [Account(email=email) as acct]:
-                        passCheck = passwordService.verify(password, acct.password)
+                        passCheck = passwordService.pwd_context.verify(password, acct.password)
 
                         if not passCheck:
                             return sanjson(status=400, body={
@@ -82,12 +92,38 @@ async def signin(request: Request):
                         user_data = dict(acct)
                         user_data.pop("password")
 
+                        newToken = Token(
+                            account_id=user_data["account_id"],
+                            valid=True,
+                            token_type = tokenType.AUTH
+
+                        )
+                        gen_token = await tokenService.generate_token(pool, newToken, pvkey)
+                        newToken.signature = gen_token.split('.')[-1]
+
+                        await tokenService.store_token(pool, newToken)
+
+                        user_data["account_id"] = user_data["account_id"].hex
+                        if user_data['is_admin']:
+                            user_data["admin"]["admin_id"] = user_data["admin"]["admin_id"].hex
+
+                        if user_data["trip"]:
+                            for trip in user_data["trips"]:
+                                user_data["trips"][trip]["trip_id"] = user_data["trips"][trip]["trip_id"].hex
+
+                        return sanjson(status=200, body={
+                            'info': 'Successfully logged in',
+                            'data': user_data,
+                            'token': gen_token
+                            })
+
                     case _:
                         return sanjson(status=404, body={
                             "info": "Invalid credentials"
                         })
 
     except Exception as e:
+        pprint.pp(e)
         raise e
 
 async def signup(request: Request):
@@ -101,14 +137,20 @@ async def signup(request: Request):
         Account = accountCtx["Account"]
         accountService = accountCtx["AccountService"]
 
+        adminCtx = app.ctx.adminCtx
+        Admin = adminCtx["Admin"]
+        adminRole = adminCtx["AdminRole"]
+        adminService = adminCtx["AdminService"]
+
         passwordService = app.ctx.PasswordService
 
         tokenCtx = app.ctx.tokenCtx
         Token = tokenCtx["Token"]
         tokenType = tokenCtx["TokenType"]
-        tokenService = tokenCtx["Service"]
+        tokenService = tokenCtx["TokenService"]
 
         form_data = request.json
+        pprint.pp(form_data)
 
         match form_data:
             case None:
@@ -136,20 +178,31 @@ async def signup(request: Request):
                     return sanjson(status=400, body={'info': 'Passwords do not match'})
 
                 match accountService.accounts:
-                    case Account(email=email) as acct:
+                    case [Account(email=email) as acct]:
                         return sanjson(status=409, body={'info': 'This email is already registered'})
-                    case None:
-                        new_account_model = Account(
+                    case _:
+                        new_account = Account(
                             email=email, 
                             phone_number=phonenumber,
-                            password=passwordService.make_hash(password),
+                            password=passwordService.pwd_context.hash(password),
                             firstname=firstname,
                             lastname=lastname,
-                            othername=othername
+                            othername=othername,
+                            is_admin=False
                         )
-                        new_account = await accountService.create_account(pool, new_account_model)
-                        account_dict = dict(new_account)
-                        account_dict.pop('password')
+                        account_created = await accountService.create_account(pool, new_account)
+                        
+                        if not account_created:
+                            return sanjson(status=500, body={'info': 'An error occurred during account creation.'})
+                        
+                        # get_admin = await adminService.fetch(pool, new_account.account_created)
+                        # admin = Admin(
+                        #     admin_id = new_account_dict["admin_id"],
+                        #     account_id = new_account_dict["account_id"],
+                        #     roles = new_account_dict["roles"],
+                        #     date = new_account_dict["date"]
+                        # )
+                        # pprint.pp(account_dict)
 
                         newToken = Token(
                             account_id = account_id["account_id"],
@@ -159,6 +212,8 @@ async def signup(request: Request):
                         gen_token = await tokenService.generate_token(pool, newToken, pvkey)
                         newToken.signature = gen_token.split('.')[-1]
                         
+                        account_dict = dict(new_account)
+                        account_dict.pop('password')
                         await tokenService.store_token(pool, newToken)
 
                         account_dict["account_id"] = account_dict["account_id"].hex
@@ -168,6 +223,9 @@ async def signup(request: Request):
                             'data': account_dict,
                             'token': gen_token
                         })
+
+                    # case _:
+                    #     return sanjson(status=500, body={'info': 'An unexpected error occurred wgen processing your request'})
 
     except Exception as e:
         raise e

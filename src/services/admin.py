@@ -23,3 +23,31 @@ class AdminService:
     @classmethod
     async def create_admin(cls, pool: Pool, admin: Admin) -> Optional[Admin]:
         """ Creates a new admin instance """
+
+    @classmethod
+    async def fetch(cls, pool: Pool, adminid: str = None, accountid: str = None) -> Optional[Admin]:
+        """ Retrieves admin data. Requires either admin id or account id. If neither is available return an error """
+
+        try:
+            if adminid:
+                async with pool.acquire() as conn:
+                    admin_record = await conn.fetch("""SELECT * FROM admin WHERE admin_id=$1""", adminid)
+                    if not admin_record:
+                        return None, 404
+
+                    admin_data = dict(admin_record)
+                    return admin_data, 200
+            elif accountid:
+                async with pool.acquire() as conn:
+                    admin_record = await conn.fetch("""SELECT * FROM admin WHERE account_id=$1""", accountid)
+                    if not admin_record:
+                        return None, 404
+
+                    admin_data = dict(admin_record)
+                    return admin_data, 200
+
+            else:
+                return None, 400
+
+        except Exception as e:
+            raise e

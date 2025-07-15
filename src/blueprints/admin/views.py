@@ -243,7 +243,7 @@ async def signin(request: Request):
                 case [Account as acc] if acc.email == email:
                     match acc.is_admin:
                         case True:
-                            passCheck = await passwordService.verify(
+                            passCheck = await passwordService.pwd_context.verify(
                                 password, acc.password
                             )
                             match passCheck:

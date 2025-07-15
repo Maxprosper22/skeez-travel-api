@@ -75,12 +75,4 @@ async def booking_handler(request: Request):
     except Exception as e:
         raise e
 
-async def signin(request: Request):
-    pass
-
-async def signup(request: Request):
-    pass
-
-async def dashboard(request: Request):
-    return redirect('/')
 

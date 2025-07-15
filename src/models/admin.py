@@ -8,7 +8,7 @@ class AdminRole(Enum):
     SUPERMOD = "supermod"
 
 class Admin(BaseModel):
-    admin_id: UUID = Field(default_factory=uuid4())
+    admin_id: UUID = Field(default_factory=lambda _: uuid4())
     account_id: UUID
     roles: AdminRole
-    date: datetime = Field(default_factory=datetime.now())
+    date: datetime = Field(default_factory= lambda _: datetime.now())
