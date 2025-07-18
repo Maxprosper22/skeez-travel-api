@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 from pydantic import BaseModel, Field, EmailStr
 from pydantic_extra_types.phone_numbers import PhoneNumber
 from uuid import UUID, uuid4
@@ -9,11 +9,11 @@ from src.models.account import Account
 from src.models.admin import Admin
 import pprint
 
-class AccountService(BaseModel):
-    accounts: Optional[list[Account]] = []
+class AccountService:
+    # def __init__(self):
+    accounts: Optional[Dict[UUID, Account]] = {}
     
-    @classmethod
-    async def create_table(cls, pool: Pool) -> None:
+    async def create_table(selfs, pool: Pool) -> None:
         """ Creates account table if it does not exist """
         try:
             async with pool.acquire() as conn:
@@ -30,6 +30,44 @@ class AccountService(BaseModel):
                         is_admin BOOLEAN NOT NULL
                     )
                 """)
+
+        except Exception as e:
+            raise e
+
+    @classmethod
+    async def initialise(cls, pool: Pool):
+        """ 
+            Retrieve account data from database. Runs on server startup.
+        """
+
+        try:
+            async with pool.acquire() as conn:
+                account_records = await conn.fetch("""
+                    SELECT * FROM accounts 
+                """)
+
+            # print(f"Account records: {account_records}; type {type(account_records)}")
+            
+            if not account_records:
+                return None
+
+            accounts_dict = [dict(account_record) for account_record in account_records]
+            # pprint.pp(accounts_dict)
+            for account_dict in accounts_dict:
+                account = Account(
+                    account_id = account_dict["account_id"],
+                    email = account_dict["email"],
+                    phone_number = account_dict["phone_number"],
+                    password = account_dict["password"],
+                    firstname = account_dict["firstname"],
+                    lastname = account_dict["lastname"],
+                    othername = account_dict["othername"],
+                    join_date = account_dict["join_date"],
+                    is_admin = account_dict["is_admin"]
+                )
+                cls.accounts[account.account_id] = account
+
+            # return account_records
 
         except Exception as e:
             raise e
@@ -105,49 +143,3 @@ class AccountService(BaseModel):
         
                 return account
 
-    @classmethod
-    async def populate_accounts(cls, pool: Pool):
-        """ 
-            Retrieve account data from database. Runs on server startup.
-        """
-
-        try:
-            async with pool.acquire() as conn:
-                account_records = await conn.fetch("""
-                    SELECT * FROM accounts 
-                    LEFT JOIN admin adm ON accounts.account_id = adm.account_id 
-                    LEFT JOIN tickets tkt ON accounts.account_id = tkt.account_id
-                """)
-
-            print(f"Account records: {account_records}; type {type(account_records)}")
-            
-            if not account_records:
-                return None
-
-            accounts_dict = dict(account_records)
-            pprint.pp(accounts_dict)
-            for account_record in accounts_dict:
-                account = Account(
-                    account_id = account_dict["account_id"],
-                    email = account_dict["email"],
-                    phone_number = account_dict["phone_number"],
-                    password = account_dict["password"],
-                    firstname = account_dict["firstname"],
-                    lastname = account_dict["lastname"],
-                    othername = account_dict["othername"],
-                    join_date = account_dict["join_date"],
-                    is_admin = account_dict["is_admin"],
-                    admin = Admin(
-                        admin_id = accounts_dict["admin_id"],
-                        account_id = accounts_dict["account_id"],
-                        role = accounts_dict["role"],
-                        date = accounts_dict["date"]
-                    ),
-                    trips=[Trip(trip_id=trip["trip_id"], destination=trip["destination"], capacity=trip["capacity"], status=trip["status"], date=trip["date"]) for trip in accounts_dict["trips"]]
-                )
-                cls.accounts.append(account)
-
-            # return account_records
-
-        except Exception as e:
-            raise e

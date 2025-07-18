@@ -40,20 +40,18 @@ async def register_services(app: Sanic) -> None:
     await app.ctx.accountCtx["AccountService"].create_table(pool=app.ctx.pool)
     
     # Retrieve and populate Accounts array of the AccountController
-    await app.ctx.accountCtx["AccountService"].populate_accounts(app.ctx.pool)
+    await app.ctx.accountCtx["AccountService"].populate_accounts(pool=app.ctx.pool)
 
     app.ctx.tripCtx = {
-        'TripService': TripService,
+        'TripService': TripService(),
         'TripStatus': TripStatus,
         'Trip': Trip
     }
 
     # Create trips table
-    await app.ctx.tripCtx["TripService"].create_trip_table(app.ctx.pool)
-    await app.ctx.tripCtx["TripService"].create_ticket_table(app.ctx.pool)
-
-    # Populate trip array
-    await app.ctx.tripCtx["TripService"].populate_trips(app.ctx.pool)
+    await app.ctx.tripCtx["TripService"].create_table(pool=app.ctx.pool)
+    # await app.ctx.tripCtx["TripService"].create_ticket_table(app.ctx.pool)
+    await app.ctx.tripCtx["TripService"].initialise(pool=app.ctx.pool)
 
     await setupECDSAKeys(app)  # Set up encryption keys
 
@@ -65,11 +63,11 @@ async def register_services(app: Sanic) -> None:
         "TokenService": TokenService
     }
 
-    await app.ctx.tokenCtx["TokenService"].create_table(app.ctx.pool)
+    await app.ctx.tokenCtx["TokenService"].create_table(pool=app.ctx.pool)
 
     app.ctx.ticketCtx = {
         "Ticket": Ticket,
         "TicketService": TicketService
     }
 
-    await app.ctx.ticketCtx["TicketService"].create_table(app.ctx.pool)
+    await app.ctx.ticketCtx["TicketService"].create_table(pool=app.ctx.pool)

@@ -39,6 +39,11 @@ class Trip(BaseModel):
 
         raise ValueError("Slots must be a list or None")
 
+    def __lt__(self, other):
+        if not isinstance(other, Trip):
+            return NotImplemented
+        return self.trip_id < other.trip_id  # Compare based on tripid
+
     class Config:
         # Allow custom types like FixedLengthList
         arbitrary_types_allowed = True
