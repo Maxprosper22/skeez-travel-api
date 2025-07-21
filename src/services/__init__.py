@@ -40,7 +40,7 @@ async def register_services(app: Sanic) -> None:
     await app.ctx.accountCtx["AccountService"].create_table(pool=app.ctx.pool)
     
     # Retrieve and populate Accounts array of the AccountController
-    await app.ctx.accountCtx["AccountService"].populate_accounts(pool=app.ctx.pool)
+    await app.ctx.accountCtx["AccountService"].initialise(pool=app.ctx.pool)
 
     app.ctx.tripCtx = {
         'TripService': TripService(),

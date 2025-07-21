@@ -20,7 +20,7 @@ async def setup_admin_app(app: Sanic) -> None:
     # admin_bp.add_signal(trip_update_signal, "trip.status.update")
 
     # Register auth middleware
-    admin_bp.middleware(authorize, "request")
+    # admin_bp.middleware(authorize, "request")
 
     await router(admin_bp)  # Set up routing
 

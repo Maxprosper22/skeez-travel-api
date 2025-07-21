@@ -54,6 +54,10 @@ async def signin(request: Request):
         Account = accountCtx["Account"]
         accountService = accountCtx["AccountService"]
 
+        adminCtx = app.ctx.adminCtx
+        Admin = adminCtx['Admin']
+        adminService = adminCtx['AdminService']
+
         passwordService = app.ctx.PasswordService
 
         tokenCtx = app.ctx.tokenCtx
@@ -62,65 +66,90 @@ async def signin(request: Request):
         tokenService = tokenCtx["TokenService"]
 
         auth_data = request.json
-        pprint.pp(auth_data)
+        # pprint.pp(auth_data)
 
-        match auth_data:
-            case None:
-                return sanjson(status=400, body={
+        if not auth_data:
+            return sanjson(status=400, body={
                     "info": "Invalid credentials"
+            })
+
+        if 'email' not in auth_data:
+            return sanjson(status=400, body={
+                "info": "Missing required fields"
+            })
+        
+        if 'password' not in auth_data:
+            return sanjson(status=400, body={
+                "info": "Missing required field - Password"
+            })
+                
+        if auth_data['email'] == None:
+            return sanjson(status=400, body={
+                "info": "Required fields cannot be empty"
+            })
+        if auth_data['password'] == None:
+            return sanjson(status=400, body={
+                "info": "Required fields cannot be empty"
+            })
+            
+        # {"email": email, "password": password}:
+
+        # pprint.pp(accountService.accounts)
+        
+        match accountService.accounts:
+            case [Account(email=email) as acct]:
+                passCheck = passwordService.pwd_context.verify(auth_data['password'], acct.password)
+
+                if not passCheck:
+                    return sanjson(status=400, body={
+                        "info": "Invalid credentials"
+                    })
+
+                newToken = Token(
+                    account_id = acct.account_id,
+                    valid=True,
+                    token_type = tokenType.AUTH
+                )
+                gen_token = await tokenService.generate_token(pool, newToken, pvkey)
+                newToken.signature = gen_token.split('.')[-1]
+
+                await tokenService.store_token(pool, newToken)
+
+                if acct.is_admin:
+                    admin_data = await adminService.fetch(pool=pool, accountid=acct.account_id)
+                    pprint.pp(admin_data)
+                    # if admin_data:
+                    acct.admin = admin_data
+
+                pprint.pp(acct)
+                # if user_data["trip"]:
+                    # for trip in user_data["trips"]:
+                        # user_data["trips"][trip]["trip_id"] = user_data["trips"][trip]["trip_id"].hex
+
+                user_data = dict(acct)
+                user_data.pop("password")
+                user_data["account_id"] = user_data["account_id"].hex
+                user_data["join_date"] = user_data["join_date"].isoformat()
+                pprint.pp(user_data)
+                if user_data['admin']:
+                    user_data['admin'] = dict(user_data['admin'])
+                    user_data['admin']['admin_id'] = user_data['admin']['admin_id'].hex
+                    user_data['admin']['account_id'] = user_data['admin']['account_id'].hex
+                    user_data['admin']['role'] = user_data['admin']['role'].value
+                    user_data['admin']['date'] = user_data['admin']['date'].isoformat()
+
+
+
+                return sanjson(status=200, body={
+                    'info': 'Successfully logged in',
+                    'data': user_data,
+                    'token': gen_token
                 })
 
-            case {"email": email, "password": password}:
-                if not email:
-                    return sanjson(status=400, body={
-                        "info": "Missing required field - Email"
-                    })
-                if not password:
-                    return sanjson(status=400, body={
-                        "info": "Missing required field - Password"
-                    })
-
-                match accountService.accounts:
-                    case [Account(email=email) as acct]:
-                        passCheck = passwordService.pwd_context.verify(password, acct.password)
-
-                        if not passCheck:
-                            return sanjson(status=400, body={
-                                "info": "Invalid credentials"
-                            })
-
-                        user_data = dict(acct)
-                        user_data.pop("password")
-
-                        newToken = Token(
-                            account_id=user_data["account_id"],
-                            valid=True,
-                            token_type = tokenType.AUTH
-
-                        )
-                        gen_token = await tokenService.generate_token(pool, newToken, pvkey)
-                        newToken.signature = gen_token.split('.')[-1]
-
-                        await tokenService.store_token(pool, newToken)
-
-                        user_data["account_id"] = user_data["account_id"].hex
-                        if user_data['is_admin']:
-                            user_data["admin"]["admin_id"] = user_data["admin"]["admin_id"].hex
-
-                        if user_data["trip"]:
-                            for trip in user_data["trips"]:
-                                user_data["trips"][trip]["trip_id"] = user_data["trips"][trip]["trip_id"].hex
-
-                        return sanjson(status=200, body={
-                            'info': 'Successfully logged in',
-                            'data': user_data,
-                            'token': gen_token
-                            })
-
-                    case _:
-                        return sanjson(status=404, body={
-                            "info": "Invalid credentials"
-                        })
+            case _:
+                return sanjson(status=404, body={
+                    "info": "Invalid credentials"
+                })
 
     except Exception as e:
         pprint.pp(e)

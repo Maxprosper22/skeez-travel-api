@@ -10,5 +10,5 @@ class AdminRole(Enum):
 class Admin(BaseModel):
     admin_id: UUID = Field(default_factory=lambda _: uuid4())
     account_id: UUID
-    roles: AdminRole
+    role: AdminRole
     date: datetime = Field(default_factory= lambda _: datetime.now())

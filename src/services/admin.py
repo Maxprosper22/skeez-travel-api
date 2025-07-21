@@ -1,6 +1,7 @@
 from asyncpg import Pool
 from uuid import UUID
 from typing import Optional
+import pprint
 
 from src.models.admin import Admin, AdminRole
 
@@ -25,29 +26,46 @@ class AdminService:
         """ Creates a new admin instance """
 
     @classmethod
-    async def fetch(cls, pool: Pool, adminid: str = None, accountid: str = None) -> Optional[Admin]:
+    async def fetch(cls, pool: Pool, adminid: UUID = None, accountid: UUID = None) -> Optional[Admin]:
         """ Retrieves admin data. Requires either admin id or account id. If neither is available return an error """
 
         try:
             if adminid:
                 async with pool.acquire() as conn:
-                    admin_record = await conn.fetch("""SELECT * FROM admin WHERE admin_id=$1""", adminid)
-                    if not admin_record:
-                        return None, 404
+                    admin_record = await conn.fetchrow("""SELECT * FROM admin WHERE admin_id=$1""", adminid)
+                
+                if not admin_record:
+                        return None
 
-                    admin_data = dict(admin_record)
-                    return admin_data, 200
+                admin_data = dict(admin_record)
+                pprint.pp(f'Admin data: {admin_data}')
+                adminData = Admin(
+                    admin_id=admin_data['admin_id'],
+                    account_id=admin_data['account_id'],
+                    role=admin_data['role'],
+                    date=admin_data['date']
+                )
+                return adminData
+
             elif accountid:
                 async with pool.acquire() as conn:
-                    admin_record = await conn.fetch("""SELECT * FROM admin WHERE account_id=$1""", accountid)
-                    if not admin_record:
-                        return None, 404
+                    admin_record = await conn.fetchrow("""SELECT * FROM admin WHERE account_id=$1""", accountid)
+                    
+                if not admin_record:
+                        return None
 
-                    admin_data = dict(admin_record)
-                    return admin_data, 200
+                admin_data = dict(admin_record)
+                pprint.pp(f'Admin data: {admin_data}')
+                adminData = Admin(
+                    admin_id=admin_data['admin_id'],
+                    account_id=admin_data['account_id'],
+                    role=admin_data['role'],
+                    date=admin_data['date']
+                )
+                return adminData
 
             else:
-                return None, 400
+                return None
 
         except Exception as e:
             raise e

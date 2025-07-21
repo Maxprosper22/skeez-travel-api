@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from typing import Optional
 from datetime import datetime, timedelta
-import jwt
+import jwt, pprint
 from asyncpg.pool import Pool
 
 from src.models.token import Token, TokenType
@@ -38,10 +38,10 @@ class TokenService:
 
         try:
             payload = {
-                'sub': token.account_id,
+                'sub': token.account_id.hex,
                 'iat': token.issue_date,
                 'exp': token.expiry,
-                'type': token.token_type
+                'type': token.token_type.value
             }
             token_str = jwt.encode(payload, key, algorithm="ES256K")
             # Functionality to store token moved up
@@ -53,6 +53,7 @@ class TokenService:
 
     @classmethod
     async def store_token(cls, pool: Pool, token: Token):
+        pprint.pp(token.token_type)
         async with pool.acquire() as conn:
             await conn.execute("""
                 INSERT INTO tokens (
@@ -65,7 +66,7 @@ class TokenService:
                     signature
                 )
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
-            """, token.token_id, token.account_id, token.valid, token.issue_date, token.expiry, token.signature)
+            """, token.token_id, token.account_id, token.valid, token.issue_date, token.expiry, token.token_type.value, token.signature)
 
     @classmethod
     async def fetch_token_by_id(cls, pool: Pool, account_id: UUID, signature: str) -> Optional[Token]:

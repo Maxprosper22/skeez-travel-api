@@ -185,42 +185,110 @@ class TripView(HTTPMethodView):
 #
 #         return sanhtml(template)
 
-async def new_admin(request: Request, acct_id: str) -> sanjson:
+async def new_admin(request: Request) -> sanjson:
     """ Create new admin accounts """
 
     try:
         app = request.app
         pool = app.ctx.pool
+
         passwordService = app.ctx.PasswordService
+
         accountCtx = app.ctx.accountCtx
         accountService = accountCtx["AccountService"]
         account = accountCtx["Account"]
+
         adminCtx = app.ctx.adminCtx
 
-        match accountService.accounts:
-            case [Account as acct] if acct.account_id.hex == acct_id:
-                if acct.is_admin:
-                    return sanjson(body={
-                        "info": "User is already admin"
-                    })
+        new_admin_data = request.json
 
-                new_admin = adminCtx["Admin"](
-                    account=acct.account_id,
-                    role=adminCtx["AdminRole"](adm_role)
-                )
-                acct.admin=new_admin
+        if not new_admin_data:
+            return sanjson(status=400, body={'info': 'Missing required data'})
+        match new_admin_data:
+            case {'accountid': accountid, 'role': role}:
+                match accountService.accounts:
+                    case [Account as acct] if acct.account_id.hex == acct_id:
+                        if acct.is_admin:
+                            return sanjson(body={
+                                "info": "User is already admin"
+                            })
 
-                async with pool.acquire() as conn:
-                    await conn.execute("""INSERT INTO admin (admin_id, account_id, role, date) VALUES ($1, $2, $3, $4)""", new_admin.admin_id, new_admin.account_id, new_admin.role, new_admin.date)
+                        newAdmin = adminCtx["Admin"](
+                            account_id=acct.account_id,
+                            role=adminCtx["AdminRole"](role).value
+                        )
+                        acct.admin=newAdmin
 
+                        async with pool.acquire() as conn:
+                            await conn.execute("""INSERT INTO admin (
+                                admin_id,
+                                account_id,
+                                role,
+                                date
+                            ) VALUES ($1, $2, $3, $4)""", newAdmin.admin_id, newAdmin.account_id, newAdmin.role.value, newAdmin.date)
+
+                        new_admin = dict(newAdmin)
+                        new_admin['admin_id'] = new_admin['admin_id'].hex
+                        new_admin['account_id']  = new_admin['account_id'].hex
+                        new_admin['role'] = new_admin['role'].value
+                        new_admin['date'] = new_admin['date'].isoformat()
+
+                        return sanjson(status=201, body={
+                            'info': 'Operation succesful',
+                            'data': new_admin
+                        })
+    
+
+                    case _:
+                        return sanjson(
+                            status=400,
+                            body={
+                                "info": "Unable to complete operation"
+                            }
+                        )
+            case {'email': email, 'role': role}:
+                match accountService.accounts:
+                    case [Account as acct] if acct.email == email:
+                        if acct.is_admin:
+                            return sanjson(body={
+                                "info": "User is already admin"
+                            })
+
+                        newAdmin = adminCtx["Admin"](
+                            account_id=acct.account_id,
+                            role=adminCtx["AdminRole"](role).value
+                        )
+                        acct.admin=newAdmin
+
+                        async with pool.acquire() as conn:
+                            await conn.execute("""INSERT INTO admin (
+                                admin_id, 
+                                account_id, 
+                                role, 
+                                date
+                            ) VALUES ($1, $2, $3, $4)""", newAdmin.admin_id, newAdmin.account_id, newAdmin.role.value, newAdmin.date)
+    
+                        new_admin = dict(newAdmin)
+                        new_admin['admin_id'] = new_admin['admin_id'].hex
+                        new_admin['account_id']  = new_admin['account_id'].hex
+                        new_admin['role'] = new_admin['role'].value
+                        new_admin['date'] = new_admin['date'].isoformat()
+
+                        return sanjson(status=201, body={'info': 'Operation succesful', 'data': new_admin})
+
+                    case _:
+                        return sanjson(
+                            status=400,
+                            body={
+                                "info": "Unable to complete operation"
+                            }
+                        )
 
             case _:
-                return sanjson(
-                    status=400,
-                    body={
-                        "info": "Unable to complete operation"
-                    }
-                )
+                return sanjson(status=500, body={
+                    'info': 'Invalid data'
+                })
+
 
     except Exception as e:
         raise e

@@ -10,10 +10,10 @@ from src.models.admin import Admin
 import pprint
 
 class AccountService:
-    # def __init__(self):
-    accounts: Optional[Dict[UUID, Account]] = {}
+    def __init__(self):
+        self.accounts: Optional[list[Account]] = []
     
-    async def create_table(selfs, pool: Pool) -> None:
+    async def create_table(self, pool: Pool) -> None:
         """ Creates account table if it does not exist """
         try:
             async with pool.acquire() as conn:
@@ -34,8 +34,7 @@ class AccountService:
         except Exception as e:
             raise e
 
-    @classmethod
-    async def initialise(cls, pool: Pool):
+    async def initialise(self, pool: Pool):
         """ 
             Retrieve account data from database. Runs on server startup.
         """
@@ -65,15 +64,14 @@ class AccountService:
                     join_date = account_dict["join_date"],
                     is_admin = account_dict["is_admin"]
                 )
-                cls.accounts[account.account_id] = account
+                self.accounts.append(account)
 
             # return account_records
 
         except Exception as e:
             raise e
 
-    @classmethod
-    async def create_account(cls, pool: Pool, account: Account) -> Optional[Account]:
+    async def create_account(self, pool: Pool, account: Account) -> Optional[Account]:
         """ Create new account """
         
         try:
@@ -101,11 +99,10 @@ class AccountService:
             pprint.pp(f"An error occurred during account creation: {e}")
             return False
 
-    @classmethod
-    async def fetch_user(cls, pool: Pool, accountid: UUID) -> Optional[Account]:
+    async def fetch_user(self, pool: Pool, accountid: UUID) -> Optional[Account]:
         """ Fetch user for self.accounts """
     
-        match cls.accounts:
+        match self.accounts:
             case [Account(account_id=account_id) as account]:
                 print(account)
 
