@@ -9,18 +9,20 @@
     <link href="/static/css/output.css" rel="stylesheet">
     <link rel="stylesheet" type="css" href="/static/toastify.css">
     {% block head %}{% endblock %}
-    <script src="/static/libraries/htmx.min.js"></script>
-    <script type="module" src="/static/libraries/htmx-ws.js"></script>
+    <!-- <script src="/static/libraries/htmx.min.js"></script> -->
+    <!-- <script type="module" src="/static/libraries/htmx-ws.js"></script> -->
+    <!-- <script type="module" src="static/library/ionic/ionic.esm.js"></script> -->
+    <!-- <script nomodule src="static/library/ionic/ionic.js"></script> -->
+    <!-- <link href="static/library/ionic/styles.css" rel="stylesheet"> -->
+    <script type="text/javascript" src="/static/js/eventsource.js"></script>
   </head>
-  <body class="flex flex-col justify-center items-center bg-base-700 dark:bg-neutral-950 text-black dark:text-white w-screen h-screen scrollbar-hide relative divide-y dark:divide-y dark:divide-gray-600 relative">
+  <body class="flex flex-col justify-center items-center /*bg-gradient-to-b from-moonlit-asteriod-end to-moonlit-asteriod-base via-moonlit-asteriod-center*/ text-black dark:text-white font-serif w-screen h-screen scrollbar-hide relative divide-y dark:divide-y dark:divide-gray-600 relative">
     
     {% block content %}{% endblock %}
 
-    {% block templates %}{% endblock %}
-
-    {% block scripts %}{% endblock %}
-    
     <script type="text/javascript" src="/static/js/base.js"></script>
     <script type="text/javascript" src="/static/js/toastify.js"></script>
+    {% block templates %}{% endblock %}
+    {% block scripts %}{% endblock %}
   </body>
 </html>

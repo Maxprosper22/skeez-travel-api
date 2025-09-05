@@ -1,0 +1,32 @@
+{% extends 'main/base.html' %}
+{% from 'main/components/trip-card.html' import TripCard %}
+{% block head %}
+<script src="/static/components/trip-card.js"></script>
+{% endblock %}
+{% block title %}{% endblock %}
+{% block content %}
+<div class="flex flex-col justify-start align-center h-full w-full gap-2 p-4 overflow-y-auto">
+  <div class="flex flex-row justify-between items-center w-full h-[4em] p-4 border border-b-grey">
+    <span class="font-bold text-2xl">Travel</span>
+    <ion-person></ion-person>
+  </div>
+  <div class="grid grid-cols-3 grid-rows-2 w-full h-12 gap-2">
+    <div class="row-span-2 flex justify-center items-center w-full h-full bg-grey-600"></div>
+    <div class="col-span-2 flex justify-center items-center w-full h-full">
+      {% if user %}
+      <span class="font-bold text-xl">{{user['firstname']}} {{user['lastname']}} {{user['othername']}}</span>
+      {% else %}
+      <span class="font-bold text-xl">Guest</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="flex flex-col justify-center align-center text-center w-full h-40 p-2 border-b border-slate-300">
+    <span class="font-bold text-2xl">Travel port</span>
+    <!-- <span class="font-medium text-sm color-grey-500">View all available trips</span> -->
+  </div>
+
+  <div id="card-container" class="flex flex-row justify-start align-center w-full gap-4 py-2 px-2 overflow-x-auto scrollbar-hidden"></div>
+</div>
+{{ TripCard() }}
+<script src="/static/js/trips.js"></script>
+{% endblock %}

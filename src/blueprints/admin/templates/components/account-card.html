@@ -1,0 +1,15 @@
+{% macro AccountCard(account) %}
+<div class="flex flex-col justify-between items-center w-full h-[4em] border border-grey-400 rounded" id="">
+  <div class="flex justify-between items-center w-full">
+    <span class="font-bold text-lg">{{ account['lastname'] }} {{ account['firstanme'] }} {{ account['othername'] }}</span>
+    {% if account['is_admin'] %}
+    <div class="flex justify-center items-center w-12 h-full" id="">
+      {{ account['admin']['role'] }}
+    </div>
+    {% endif %}
+  </div>
+  <div class="flex flex-row justify-center items-center w-full" id="">
+    <span>{{ account['email'] }}</span>
+  </div>
+</div>
+{% endmacro %}

@@ -14,7 +14,7 @@ class Post(BaseModel):
     content: str = ''
     media: Optional[List[UUID]] = None   # An array of urls ()
     quote: Optional[UUID] = None   # Quoted post ID (One-to-one relationship)
-                      date: datetime = Field(default_factory=lambda _: datetime.now())
+    date: datetime = Field(default_factory=lambda _: datetime.now().replace(second=0, microseconds=0))
 
 class PostRepository(ABC):
 

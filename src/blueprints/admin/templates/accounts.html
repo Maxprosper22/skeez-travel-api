@@ -1,0 +1,17 @@
+{% extends 'main/base.html' %}
+{% from 'admin/compomemts/account-card.html' import AccountCard %}
+{% block head %}{% endblock %}
+{% block title %}Admin - Account Management{% endblock %}
+{% block content %}
+<div class="flex flex-col justify-start items-center w-full h-full">
+  <div class="flex justify-center items-center w-full h-[4em]">
+    <span>Account Management</span>
+  </div>
+
+  <div class="flex flex-col justify-start items-center w-full px-2 gap-2">
+  {% for account in accounts %}
+    {{ AccountCard() }}
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}

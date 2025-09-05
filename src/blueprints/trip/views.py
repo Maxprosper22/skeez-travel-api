@@ -12,17 +12,24 @@ async def fetch_trips(request: Request):
 
     app = request.app
     pool = app.ctx.pool
-    trip_manager = app.ctx.TripManager
+    tripCtx = app.ctx.tripCtx
+    Trip = tripCtx['Trip']
+    tripStatus = tripCtx['TripStatus']
+    tripService = tripCtx['TripService']
 
-    trips = await fetchTrips(app, pool)
+    trips = tripService.trips
+    all_trips = []
     
-    if trips == None:
-        return sanjson({})
+    if not trips:
+        return sanjson(body={'data': []})
     
     for trip in trips:
-        trips[trip.trip_id.hex()] = trip.model_dump
+        pprint.pp(trip)
+        all_trips.append(trip.model_dump())
+        
+    pprint.pp(all_trips)
 
-    return sanjson(trips)
+    return sanjson(body={'data': all_trips})
 
 async def fetch_trip(request: Request, trip_id: str) :
     """ 

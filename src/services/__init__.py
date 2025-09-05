@@ -7,7 +7,7 @@ from .account import AccountService
 from src.models.account import Account
 
 from .trip import TripService
-from src.models.trip import Trip, TripStatus
+from src.models.trip import Trip, TripStatus, Destination
 
 from .token import TokenService
 from src.models.token import Token, TokenType
@@ -17,10 +17,33 @@ from src.models.admin import Admin, AdminRole
 
 from.ticket import TicketService
 from src.models.ticket import Ticket
+from .pubsub import PubSub, ClientSubscription, Publisher, Subscriber, Channel, EmailSubscriber, SMSSubscriber, SSESubscriber
 
 async def register_services(app: Sanic) -> None:
     """ Register services """
     
+    app.ctx.pubsub = PubSub()
+    app.ctx.Publisher = Publisher()
+    app.ctx.clientSubscription = ClientSubscription
+    app.ctx.Subscriber = Subscriber
+    app.ctx.Channel = Channel
+    app.ctx.SSESubscriber = SSESubscriber
+    app.ctx.SMSSubscriber = SMSSubscriber
+    app.ctx.EmailSubscriber = EmailSubscriber
+
+    app.ctx.tripSSEChannel = app.ctx.Publisher.channels['sse']
+
+    app.ctx.tripCtx = {
+        'TripService': TripService(pool=app.ctx.pool, publisher=app.ctx.Publisher),
+        'TripStatus': TripStatus,
+        'Trip': Trip,
+        'Destination': Destination
+    }
+
+    # Create trips table
+    await app.ctx.tripCtx["TripService"].create_table(pool=app.ctx.pool)
+    await app.ctx.tripCtx["TripService"].initialise()
+
     # Admin context varuables
     app.ctx.adminCtx = {
         "Admin": Admin,
@@ -33,7 +56,7 @@ async def register_services(app: Sanic) -> None:
     # app.ctx.AccountModel = Account
     app.ctx.accountCtx = {
         "Account": Account,
-        "AccountService": AccountService()
+        "AccountService": AccountService(pool=app.ctx.pool, publisher=app.ctx.Publisher)
     }
 
     # Create new accounts table if it doesn't exist
@@ -42,16 +65,6 @@ async def register_services(app: Sanic) -> None:
     # Retrieve and populate Accounts array of the AccountController
     await app.ctx.accountCtx["AccountService"].initialise(pool=app.ctx.pool)
 
-    app.ctx.tripCtx = {
-        'TripService': TripService(),
-        'TripStatus': TripStatus,
-        'Trip': Trip
-    }
-
-    # Create trips table
-    await app.ctx.tripCtx["TripService"].create_table(pool=app.ctx.pool)
-    # await app.ctx.tripCtx["TripService"].create_ticket_table(app.ctx.pool)
-    await app.ctx.tripCtx["TripService"].initialise(pool=app.ctx.pool)
 
     await setupECDSAKeys(app)  # Set up encryption keys
 
@@ -67,7 +80,9 @@ async def register_services(app: Sanic) -> None:
 
     app.ctx.ticketCtx = {
         "Ticket": Ticket,
-        "TicketService": TicketService
+        "TicketService": TicketService()
     }
 
     await app.ctx.ticketCtx["TicketService"].create_table(pool=app.ctx.pool)
+
+

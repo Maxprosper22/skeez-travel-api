@@ -1,6 +1,7 @@
 from sanic import Sanic
 from sanic.request import Request
 from sanic.response import html as sanhtml, json as sanjson
+from sanic.views import HTTPMethodView
 
 from uuid import UUID
 import pprint, traceback
@@ -10,11 +11,10 @@ async def account_info(request: Request, account_id: str) -> sanjson:
     try:
         if not account_id:
             return sanjson(
-                    status=400,
-                    body={
-                        'info': 'Missing a required field'
-                        }
-                    )
+                status=400,
+                body={
+                    'info': 'Missing a required field'
+            })
 
         app = request.app
         pool = app.ctx.pool
@@ -26,23 +26,49 @@ async def account_info(request: Request, account_id: str) -> sanjson:
                 account_data = dict(acctModel)
                 account_data.pop("password")
 
-                return sanjson(
-                        body={
-                            "data": account_data
-                            }
-                        )
+                return sanjson(body={"data": account_data})
 
             case _:
                 return sanjson(
-                        status=404,
-                        body={
-                            "info": "No data found"
-                            }
-                        )
+                    status=404,
+                    body={
+                        "info": "No data found"
+                })
 
     except Exception as e:
         raise e
 
+async def signout(request: Request):
+    """ Handle user authentication """
+    try:
+        app = request.app
+        pool = app.ctx.pool
+        token = request.token
+        pprint.pp(f"Auth token: {token}")
+
+        tokenCtx = app.ctx.tokenCtx
+        Token = tokenCtx['Token']
+        tokenService = tokenCtx['TokenService']
+
+        if not token:
+            return sanjson(status=400, body={'info': 'Bad request'})
+
+        tk_sig = token.split('.')[-1]
+        retrieve_tk = await tokenService.fetch_token(pool=pool, signature=tk_sig)
+
+        if not retrieve_tk:
+            return sanjson(status=400, body={'info': 'Bad or invalid token'})
+
+        token_res = await tokenService.invalidate_token(pool=pool, signature=tk_sig)
+        
+        if token_res.valid:
+            return sanjson(status=500, body={'info': 'An error occurred during operation'})
+
+        return sanjson(status=200, body={'info': 'Successfully logged out', 'authenticated': False})
+
+    except Exception as e:
+        raise e
+    
 async def signin(request: Request):
     """ Handle user authentication """
     try:
@@ -66,11 +92,11 @@ async def signin(request: Request):
         tokenService = tokenCtx["TokenService"]
 
         auth_data = request.json
-        # pprint.pp(auth_data)
+        pprint.pp(auth_data)
 
         if not auth_data:
             return sanjson(status=400, body={
-                    "info": "Invalid credentials"
+                "info": "Invalid credentials"
             })
 
         if 'email' not in auth_data:
@@ -96,60 +122,44 @@ async def signin(request: Request):
 
         # pprint.pp(accountService.accounts)
         
-        match accountService.accounts:
-            case [Account(email=email) as acct]:
-                passCheck = passwordService.pwd_context.verify(auth_data['password'], acct.password)
+        account = await accountService.fetch_user(pool, email=auth_data['email'])
+        if not account:
+            return sanjson(status=404, body={
+                "info": "Invalid credentials"
+            })
+        # pprint.pp(account)        
+        passCheck = passwordService.pwd_context.verify(auth_data['password'], account['password'])
 
-                if not passCheck:
-                    return sanjson(status=400, body={
-                        "info": "Invalid credentials"
-                    })
+        if not passCheck:
+            return sanjson(status=400, body={"info": "Invalid credentials"})
 
-                newToken = Token(
-                    account_id = acct.account_id,
-                    valid=True,
-                    token_type = tokenType.AUTH
-                )
-                gen_token = await tokenService.generate_token(pool, newToken, pvkey)
-                newToken.signature = gen_token.split('.')[-1]
+        newToken = Token(
+            account_id = account['account_id'],
+            valid=True,
+            token_type = tokenType.AUTH
+        )
+        gen_token = await tokenService.generate_token(pool, newToken, pvkey)
+        newToken.signature = gen_token.split('.')[-1]
+        await tokenService.store_token(pool, newToken)
 
-                await tokenService.store_token(pool, newToken)
+        account["account_id"] = account["account_id"].hex
+        account["join_date"] = account["join_date"].isoformat()
+        pprint.pp(f"Admin data type: {type(account['admin'])}")
 
-                if acct.is_admin:
-                    admin_data = await adminService.fetch(pool=pool, accountid=acct.account_id)
-                    pprint.pp(admin_data)
-                    # if admin_data:
-                    acct.admin = admin_data
+        response = sanjson(status=200, body={
+            'info': 'Successfully logged in',
+            'authenticated': True,
+            'data': account,
+            'token': gen_token
+        })
+        # response.add_cookie(
+        #     'auth_token',
+        #     gen_token,
+        #     max_age = newToken.expiry.timestamp(),
+        #     httponly = True
+        # )
 
-                pprint.pp(acct)
-                # if user_data["trip"]:
-                    # for trip in user_data["trips"]:
-                        # user_data["trips"][trip]["trip_id"] = user_data["trips"][trip]["trip_id"].hex
-
-                user_data = dict(acct)
-                user_data.pop("password")
-                user_data["account_id"] = user_data["account_id"].hex
-                user_data["join_date"] = user_data["join_date"].isoformat()
-                pprint.pp(user_data)
-                if user_data['admin']:
-                    user_data['admin'] = dict(user_data['admin'])
-                    user_data['admin']['admin_id'] = user_data['admin']['admin_id'].hex
-                    user_data['admin']['account_id'] = user_data['admin']['account_id'].hex
-                    user_data['admin']['role'] = user_data['admin']['role'].value
-                    user_data['admin']['date'] = user_data['admin']['date'].isoformat()
-
-
-
-                return sanjson(status=200, body={
-                    'info': 'Successfully logged in',
-                    'data': user_data,
-                    'token': gen_token
-                })
-
-            case _:
-                return sanjson(status=404, body={
-                    "info": "Invalid credentials"
-                })
+        return response
 
     except Exception as e:
         pprint.pp(e)

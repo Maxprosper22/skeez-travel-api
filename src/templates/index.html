@@ -1,5 +1,6 @@
 {% extends "main/base.html" %}
 {% from "main/components/post.html" import Post %}
+{% from "main/components/footer.html" import Footer %}
 {% from "main/components/post-template.html" import PostTemplate %}
 {% from "main/components/create-post-template.html" import CreatePostTemplate %}
 
@@ -8,33 +9,55 @@
 {% block head %}{% endblock %}
 
 {% block content %}
-<div class="flex flex-col justify-start items-center w-full h-lvh relative overflow-y-scroll scrollbar-hide relative scroll-smooth snap-y snap-mandatory">
+<div class="flex flex-col justify-start items-center w-full h-dvh relative overflow-y-scroll scrollbar-hide relative scroll-smooth snap-y snap-mandatory">
   <!-- <div id="nav" class="flex justify-center items-center w-full h-24 border"> -->
   <!--   <span class="text-4xl font-bold">Orb</span> -->
   <!-- </div> -->
-  <div id="hero" class="flex flex-col justify-center items-center w-full min-h-full gap-y-6 bg-neutral-800 bg-[url(/static/yeshi-kangrang.jpg)] bg-no-repeat bg-blend-multiply bg-cover bg-center snap-center snap-always">
-    <div class="flex flex-col justify-center items-center w-8/10 object-fit rounded-lg overflow-hidden /* animate-on-scroll opacity-0 transform translate-y-10 transition-all duration-1000 ease-in-out */">
-      <img src="/static/yeshi-kangrang.jpg" alt="Photo 2" />
+  <div class="flex flex-col justify-center items-center w-full min-h-screen p-y-12 gap-y-19 bg-neutral-700 bg-[url(/static/yeshi-kangrang.jpg)] bg-no-repeat bg-blend-multiply bg-cover bg-center snap-start snap-always text-white gap-10">
+    <!-- <div class="flex flex-col justify-center items-center w-8/10 object-fit rounded-lg overflow-hidden /* animate-on-scroll opacity-0 transform translate-y-10 transition-all duration-1000 ease-in-out */"> -->
+    <!--   <img src="/static/yeshi-kangrang.jpg" alt="Photo 2" /> -->
+    <!-- </div> -->
+    <div class="flex flex-col justify-center items-center text-center w-8/10 leading-8">
+      <span id="font-bold text-2xl" class="text-5xl font-bold">Travel With Steeze</span>
+      <span id="text-lg" class="text-xl">Travel with lorem iosum dolor amiet</span>
     </div>
-    <div class="flex flex-col justify-center items-center w-8/10 leading-8">
-      <span id="hero-head" class="text-5xl font-bold">Travel With Steeze</span>
-      <span id="hero-text" class="text-xl">Travel with lorem iosum dolor amiet</span>
+    <div class="flex flex-col justify-evenly items-center w-full h-36 gap-6">
+      <div class="flex justify-center items-center w-76 h-16 rounded-full bg-btn-floor font-bold">
+        <a href="/trips" class="flex justify-center items-center w-full h-full text-btn-floor no-underline text-white">
+          <span class="text-white">Get started</span>
+        </a>
+      </div>
+      <div class="flex justify-center items-center w-76 h-16 rounded-full fint-bold border border-btn-floor hover:bg-btn-flor/50">
+        <a href="/trips" class="flex justify-center items-center w-full h-full no-underline text-btn-floor">
+          <span class="text-btn-floor">Get started</span>
+        </a>
+      </div>
     </div>
-    <div class="btn btn-wide rounded-lg">Get started</div>
   </div>
 
-  <div class="flex flex-col justify-center items-center w-full min-h-full snap-center snap-always relative bg-neutral-950"> 
+  <div class="flex flex-col justify-center items-center w-full min-h-screen snap-start snap-always relative"> 
     <div class="flex flex-col justify-center items-center w-8/10 object-fit absolute top-60 left-10 rounded-lg overflow-hidden animate-on-scroll opacity-0 transform translate-y-10 transition-all duration-1000 ease-in-out rounded-lg">
       <img src="/static/yeshi-kangrang.jpg" alt="Photo 2" />
     </div>
 
-    <div class="flex flex-col justify-center items-center max-w-2/3 absolute bottom-50 right-10 rounded animate-on-scroll opacity-0 transform translate-y-10 transition-all delay-850 duration-1000 ease-in-out text-white">
+    <div class="flex flex-col justify-center items-center max-w-2/3 absolute bottom-50 right-10 rounded animate-on-scroll opacity-0 transform translate-y-10 transition-all delay-850 duration-1000 ease-in-out">
       <h2 class="text-4xl">New album is released!</h2>
       <p>Click the button to listen on Spotiwhy app.</p>
     </div>
   </div>
 
-  <div class="flex flex-col justify-center items-center w-full min-h-full snap-center snap-always">
+  <div class="flex flex-col justify-center items-center w-full min-h-full snap-start snap-always relative"> 
+    <div class="flex flex-col justify-center items-center w-full h-[50%] object-fit rounded-lg">
+      <img src="/static/yeshi-kangrang.jpg" alt="Photo 2" />
+    </div>
+
+    <div class="flex flex-col justify-center items-center max-w-2/3 h-[50%] rounded">
+      <h2 class="text-4xl">New album is released!</h2>
+      <p>Click the button to listen on Spotiwhy app.</p>
+    </div>
+  </div>
+
+  <div class="flex flex-col justify-center items-center w-full min-h-screen snap-start snap-always">
     <div class="card bg-base-100 image-full w-96 shadow-sm justify-center items-center animate-on-scroll opacity-0 transform translate-y-10 transition-all duration-1500 ease-in-out bg-blue-500 text-white p-6 rounded-lg">
       <figure>
         <img
@@ -51,25 +74,36 @@
     </div>
   </div>
 
-  <div class="flex flex-col justify-center items-center w-full min-h-full snap-center snap-always">
-    <div class="card bg-base-100 image-full w-96 shadow-sm justify-center items-center animate-on-scroll opacity-0 transform translate-y-10 transition-all duration-1500 ease-in-out bg-blue-500 text-white p-6 rounded-lg">
-      <figure>
-        <img
-          src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-          alt="Shoes" />
-      </figure>
+  <div class="flex flex-col justify-center items-center w-full min-h-screen snap-start snap-always">
+    <div class="card bg-base-100 w-96 shadow-sm justify-center items-center animate-on-scroll opacity-0 transform translate-y-10 transition-all duration-1500 ease-in-out bg-blue-500 text-white p-6 rounded-lg">
+      <!-- <figure> -->
+      <!--   <img -->
+      <!--     src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp" -->
+      <!--     alt="Shoes" /> -->
+      <!-- </figure> -->
       <div class="card-body">
         <h2 class="card-title">Card Title</h2>
         <p>A card component has a figure, a body part, and inside body there are title and actions parts</p>
         <!-- <div class="card-actions justify-end"> -->
         <!--   <button class="btn btn-primary">Buy Now</button> -->
         <!-- </div> -->
+      </div>
+    </div>
+    <div class="card bg-neutral text-neutral-content w-96">
+      <div class="card-body items-center text-center">
+        <h2 class="card-title">Cookies!</h2>
+        <p>We are using cookies for no reason.</p>
+        <div class="card-actions justify-end">
+          <button class="btn btn-primary">Accept</button>
+          <button class="btn btn-ghost">Deny</button>
+        </div>
       </div>
     </div>
   </div>
 
   <div id="section-2" class=""></div>
   <div id="cta-section" class=""></div>
+  {{ Footer() }}
 </div>
 {% endblock %}
 

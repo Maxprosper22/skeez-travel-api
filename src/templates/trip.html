@@ -1,0 +1,64 @@
+{% extends 'main/base.html' %}
+{% block head %}{% endblock %}
+{% block title %}Trip - {{trip.trip_id}}{% endblock %}
+{% block content %}
+<div class="flex flex-col justify-start items-center w-full h-screen gap-8 py-2 px-4 overflow-y-auto">
+
+  <div class="flex flex-col justify-center items-center w-full h-20 border-b border-slate-300">
+    <span class="font-bold text-xl">Trip id</span>
+  </div>
+
+  <div class="grid grid-cols-2 grid-flow-row w-full h-60 p-2 gap-6 rounded">
+    <div class="flex flex-col justify-evenly items-center w-full h-full rounded-lg border border-slate-300 dark:border-none dark:bg-dark-tint">
+      <div class="flex flex-row justify-center items-center w-full gap-[.2em]">
+        <!-- <Ionicons name="calendar" size={28} color={colorScheme == 'light' ? 'black' : 'grey'} /> -->
+        <span class="font-bold text-lg">Date</span>
+      </div>
+      <span>Someday</span>
+    </div>
+
+    <div class="flex flex-col justify-evenly items-center w-full h-full rounded-lg border border-slate-300 dark:border-none dark:bg-dark-tint">
+      <div class="flex flex-row justify-center items-center w-full gap-[.2em]">
+        <!-- <Ionicons name="ellipse" size={28} color={colorScheme == 'light' ? 'black' : 'grey'} /> -->
+        <span class="font-bold text-lg">Status</span>
+      </div>
+      <span>Pending</span>
+    </div>
+
+    <div class="flex flex-col justify-evenly items-center w-full h-full rounded-lg border border-slate-300 dark:border-none dark:bg-dark-tint">
+      <div class="flex flex-row justify-evenly items-center w-full gap-[.2em]">
+        <!-- <Ionicons name="location" size={28} color={colorScheme == 'light' ? 'black' : 'grey'} /> -->
+        <span class="font-bold text-lg">Destination</span>
+      </div>
+      <span>Somewhere</span>
+    </div>
+
+    <div class="flex flex-col justify-evenly items-center w-full h-full rounded-lg border border-slate-300 dark:border-none dark:bg-dark-tint">
+      <div class="flex flex-row justify-center items-center w-full gap-[.2em]">
+        <!-- <Ionicons name="people-circle" size={28} color={colorScheme == 'light' ? 'black' : 'grey'} /> -->
+        <span class="font-bold text-lg">Capacity</span>
+      </div>
+      <span>Something</span>
+    </div>
+  </div>
+
+  <a class="flex flex-col justify-center items-center w-[70%] h-[3em] font-bold rounded-lg bg-btn-100" href="/modal">
+    <span class="font-bold text-lg">Book</span>
+  </a>
+
+  <div class="justify-center items-center w-full p-[1em] rounded">
+    <div class="flex flex-row justify-start align-center w-full h-[3em] gap-[.3em] border border-grey-700">
+      <!-- <Ionicons name="people-circle" size={28} color={colorScheme == 'light' ? 'black' : 'grey'} /> -->
+      <span clas="text-bold text-lg">Passengers</span>
+    </div>
+    <div class="justify-center items-center w-full p-[1em]">
+      <div class="flex flex-row justify-start items-center w-full h-[3em] gap-[.5em] border border-grey-700">
+        <!-- <Ionicons name='person' size={24} color={colorScheme == 'light' ? 'black' : 'grey'} /> -->
+        <span class="text-bold text-lg">Mapro Skeez<span>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- bg-[#25292e] -->
+{% endblock %}

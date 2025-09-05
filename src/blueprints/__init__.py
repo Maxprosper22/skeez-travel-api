@@ -16,5 +16,5 @@ async def register_apps(app: Sanic) -> None:
     account_bp = await setup_accounts(app)
     app.blueprint(account_bp)
 
-    trip_bp = await setup_trip_app(app)
-    app.blueprint(trip_bp)
+    # trip_bp = await setup_trip_app(app)
+    # app.blueprint(trip_bp)

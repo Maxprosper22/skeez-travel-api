@@ -7,11 +7,16 @@ from datetime import datetime
 
 from src.models.account import Account
 from src.models.admin import Admin
+
+from .pubsub import Publisher, Channel, SMSSubscriber, EmailSubscriber, SSESubscriber
 import pprint
+import json
 
 class AccountService:
-    def __init__(self):
-        self.accounts: Optional[list[Account]] = []
+    def __init__(self, pool: Pool, publisher: Publisher):
+        self.accounts: Optional[Dict[str, Account]] = {}
+        self.pool: Pool = pool
+        self.publisher = Publisher
     
     async def create_table(self, pool: Pool) -> None:
         """ Creates account table if it does not exist """
@@ -38,21 +43,14 @@ class AccountService:
         """ 
             Retrieve account data from database. Runs on server startup.
         """
-
         try:
-            async with pool.acquire() as conn:
-                account_records = await conn.fetch("""
-                    SELECT * FROM accounts 
-                """)
-
-            # print(f"Account records: {account_records}; type {type(account_records)}")
-            
-            if not account_records:
-                return None
-
-            accounts_dict = [dict(account_record) for account_record in account_records]
-            # pprint.pp(accounts_dict)
-            for account_dict in accounts_dict:
+            records = await self.fetch(pool=pool)
+            # pprint.pp(f"Account records: {records}; type {type(records)}")            
+            if not records:
+                return
+            # accounts_array = [dict(account_record) for account_record in records]
+            # pprint.pp(records)
+            for account_dict in records:
                 account = Account(
                     account_id = account_dict["account_id"],
                     email = account_dict["email"],
@@ -64,9 +62,7 @@ class AccountService:
                     join_date = account_dict["join_date"],
                     is_admin = account_dict["is_admin"]
                 )
-                self.accounts.append(account)
-
-            # return account_records
+                self.accounts[account.account_id.hex] = account
 
         except Exception as e:
             raise e
@@ -99,44 +95,165 @@ class AccountService:
             pprint.pp(f"An error occurred during account creation: {e}")
             return False
 
-    async def fetch_user(self, pool: Pool, accountid: UUID) -> Optional[Account]:
+    async def fetch_user(self, pool: Pool, accountid: UUID=None, email: EmailStr=None) -> Optional[Account]:
         """ Fetch user for self.accounts """
-    
-        match self.accounts:
-            case [Account(account_id=account_id) as account]:
-                print(account)
-
-                return account
-
-            case _:
+        try:
+            if accountid:
                 async with pool.acquire() as conn:
-                    account_record = await conn.execute("""
-                        SELECT * FROM accounts INNER JOIN accounts acct ON admin adm WHERE account_id = $1
+                    account_record = await conn.fetchrow("""
+                        SELECT 
+                            accts.*,
+                            row_to_json(adm) AS admin,
+                            COALESCE(
+                                array_agg(
+                                    json_build_object(
+                                        'trip_id', trps.trip_id,
+                                        'destination_id', trps.destination_id,
+                                        'capacity', trps.capacity,
+                                        'status', trps.status,
+                                        'date', trps.date
+                                    )
+                                ) FILTER (WHERE trps.trip_id IS NOT NULL),
+                                '{}'
+                            ) AS trips
+                        FROM
+                            accounts accts
+                        LEFT JOIN
+                            admin adm
+                        ON
+                            accts.account_id = adm.admin_id
+                        LEFT JOIN 
+                            tickets tkt
+                        ON 
+                            accts.account_id = tkt.account_id
+                        LEFT JOIN
+                            trips trps
+                        ON 
+                            tkt.trip_id = trps.trip_id
+                        LEFT JOIN 
+                            destinations dests
+                        ON
+                            trps.destination_id = dests.destination_id
+                        WHERE 
+                            accts.account_id = $1
+                        GROUP BY
+                            accts.account_id, adm.admin_id
                     """, accountid)
 
                 if not account_record:
                     return None
+
+            elif email:
+                async with pool.acquire() as conn:
+                    account_record = await conn.fetchrow("""
+                        SELECT 
+                            accts.*,
+                            row_to_json(adm) AS admin,
+                            COALESCE(
+                                array_agg(
+                                    json_build_object(
+                                        'trip_id', trps.trip_id,
+                                        'destination_id', trps.destination_id,
+                                        'capacity', trps.capacity,
+                                        'status', trps.status,
+                                        'date', trps.date
+                                    )
+                                ) FILTER (WHERE trps.trip_id IS NOT NULL),
+                                '{}'
+                            ) AS trips
+                        FROM
+                            accounts accts
+                        LEFT JOIN
+                            admin adm
+                        ON
+                            adm.account_id = accts.account_id
+                        LEFT JOIN 
+                            tickets tkt
+                        ON 
+                            tkt.account_id = accts.account_id
+                        LEFT JOIN
+                            trips trps
+                        ON 
+                            trps.trip_id = tkt.trip_id
+                        LEFT JOIN 
+                            destinations dests
+                        ON
+                            trps.destination_id = dests.destination_id
+                        WHERE 
+                            accts.email = $1
+                        GROUP BY
+                            accts.account_id, adm.admin_id
+                    """, email)
+
                 
-                account_dict = dict(account_record)
+                if not account_record:
+                    return None
+
                 # accout_dict.pop("password")
 
-                account = Account(
-                    account_id = account_dict["account_id"],
-                    email = account_dict["email"],
-                    phone_number = account_dict["phone_number"],
-                    passwordb= account_dict["password"],
-                    firstname = account_dict["firstname"],
-                    lastname = account_dict["lastname"],
-                    othername = account_dict["othername"],
-                    join_date = account_dict["join_date"],
-                    is_admin = account_dict["is_admin"],
-                    admin = Admin(
-                        admin_id = account_dict["admin_id"],
-                        account_id = account_dict["account_id"],
-                        roles = account_dict["roles"],
-                        date = account_dict["date"]
-                    )
-                )
+                # account = Account(
+                #     account_id = account_dict["account_id"],
+                #     email = account_dict["email"],
+                #     phone_number = account_dict["phone_number"],
+                #     passwordb= account_dict["password"],
+                #     firstname = account_dict["firstname"],
+                #     lastname = account_dict["lastname"],
+                #     othername = account_dict["othername"],
+                #     join_date = account_dict["join_date"],
+                #     is_admin = account_dict["is_admin"],
+                #     admin = Admin(
+                #         admin_id = account_dict["admin_id"],
+                #         account_id = account_dict["account_id"],
+                #         roles = account_dict["roles"],
+                #         date = account_dict["date"]
+                #     )
+                # )
         
-                return account
+            
+            # pprint.pp(account_record)
+            account_dict = dict(account_record)
+            # pprint.pp(account_dict)
 
+            if account_dict['admin']:
+                account_dict['admin'] = json.loads(account_dict['admin'])
+        
+            return account_dict
+        except Exception as e:
+            raise e
+    
+    async def fetch(self, pool):
+        """ Fetch all account data """
+        try:
+            async with pool.acquire() as conn:
+                records = await conn.fetch("""
+                    SELECT 
+                        acct.*,
+                        COALESCE(array_agg(trps.*) FILTER (WHERE trps.* IS NOT NULL), '{}') AS trips
+                    FROM
+                        accounts acct
+                    LEFT JOIN
+                        admin adm
+                    ON 
+                        adm.account_id = acct.account_id
+                    LEFT JOIN
+                        tickets tkt
+                    ON 
+                        tkt.account_id = acct.account_id
+                    LEFT JOIN
+                        trips trps
+                    ON 
+                        trps.trip_id = tkt.trip_id
+                    GROUP BY
+                        acct.account_id
+                """)
+
+            if not records:
+                return None
+
+            # pprint.pp(records)
+
+            accounts = [dict(record) for record in records]
+            return accounts
+
+        except Exception as e:
+            raise e

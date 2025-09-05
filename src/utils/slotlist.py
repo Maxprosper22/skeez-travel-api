@@ -1,4 +1,3 @@
-
 from typing import Optional, List, Dict, TypeVar, Any
 from typing_extensions import Self  # For Python <3.11; use `typing.Self` in Python 3.11+
 

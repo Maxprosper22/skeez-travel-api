@@ -1,0 +1,12 @@
+@theme {
+  --color-light-floor: #f1f1f1;
+  --color-light-tint: #ffffff;    
+  --color-dark-black:#190A05;
+  --color-swiss-blue-950: #121216;
+  --color-swiss-blue-100: #4b6cb7;
+  --color-dark-tint: #303349;
+  --color-btn-floor: #cd7f32;
+  --color-moonlit-asteriod-base: #0F2027;
+  --color-moonlit-asteriod-center: #203A43;
+  --color-moonlit-asteriod-end: #2C5364;
+}

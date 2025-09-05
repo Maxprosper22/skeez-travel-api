@@ -16,7 +16,7 @@ class Account(BaseModel):
     firstname: str
     lastname: str
     othername: Optional[str] = None
-    join_date: datetime = Field(default_factory=lambda _: datetime.now())
+    join_date: datetime = Field(default_factory=lambda _: datetime.now().replace(second=0, microsecond=0))
     is_admin: bool = False
     admin: Optional[Admin] = None
     trips: Optional[Trip] = None

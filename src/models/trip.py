@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Dict, TypeVar, Any
 from enum import Enum
 
+# from src.services import Publisher, Channel, SSESubscriber, SMSSubscriber, EmailSubscriber
 from src.utils.slotlist import SlotList
 
 class TripStatus(Enum):
@@ -13,13 +14,25 @@ class TripStatus(Enum):
     COMPLETE = "complete"      # Trip is done
     CANCELLED = "cancelled"    # Trip is/was cancelled
 
+class DestinationType(Enum):
+    WARRI = {'destination': 'Warri', 'price': '5000'}
+    PORT_HARCOURT = {'destination': 'Port Harcourt', 'price': '4500'}
+
+class Destination(BaseModel):
+    destination_id: UUID = Field(default_factory=lambda _: uuid4())
+    name: str
+    price: float
+
 class Trip(BaseModel):
     trip_id: UUID = Field(default_factory=lambda: uuid4())
-    destination: str
+    destination: Destination
     capacity: int = 10
     slots: Optional[SlotList[Dict]] = []  # A list of passengers
     status: TripStatus = Field(default=TripStatus.PENDING)
-    date: datetime = Field(default_factory= lambda _: datetime.now())
+    date: datetime = Field(default_factory= lambda _: datetime.now().replace(second=0, microsecond=0))
+    # sms_channel: Channel
+    # email_channel: Channel
+    # sse_channel: Channel
 
     @field_validator("slots", mode="before")
     def initialize_slots(cls, slots: Any, values: Any) -> SlotList[Dict]:

@@ -53,7 +53,7 @@ class TokenService:
 
     @classmethod
     async def store_token(cls, pool: Pool, token: Token):
-        pprint.pp(token.token_type)
+        # pprint.pp(token.token_type)
         async with pool.acquire() as conn:
             await conn.execute("""
                 INSERT INTO tokens (
@@ -69,42 +69,89 @@ class TokenService:
             """, token.token_id, token.account_id, token.valid, token.issue_date, token.expiry, token.token_type.value, token.signature)
 
     @classmethod
-    async def fetch_token_by_id(cls, pool: Pool, account_id: UUID, signature: str) -> Optional[Token]:
-        async with pool.acquire() as conn:
-            row = await conn.fetchrow("""
-                SELECT * FROM tokens WHERE account_id=$1 AND signature=$2
-            """, account_id, signature)
-            if row:
-                return Token(**dict(row))
-            return None
+    async def fetch_token(cls, pool: Pool, accountid: UUID = None, tokenid = None, signature: str = None) -> Optional[Token]:
+        """ Retrieve token from database """
+        try:
+            if tokenid:
+                async with pool.acquire() as conn:
+                    row = await conn.fetchrow("""
+                        SELECT * FROM tokens WHERE token_id=$1
+                    """, token_id, signature)
 
-    # async def fetch_by_signature
+                if not row:
+                    return None
+
+            elif signature:
+                async with pool.acquire() as conn:
+                    row = await conn.fetchrow("""
+                        SELECT * FROM tokens WHERE signature=$1
+                    """, signature)
+
+                if not row:
+                    return None
+
+            token_dict = dict(row)
+            return Token(
+                token_id = token_dict['token_id'],
+                account_id = token_dict['account_id'],
+                valid = token_dict['valid'],
+                issue_date = token_dict['issue_date'],
+                expiry = token_dict['expiry'],
+                token_type = token_dict['token_type'],
+                signature = token_dict['signature']
+            )
+
+        except Exception as e:
+            raise e
 
     @classmethod
-    async def invalidate_token(cls, pool: Pool, account_id: UUID, signature: str):
-        async with pool.acquire() as conn:
-            await conn.execute("""
-                UPDATE tokens SET valid=false WHERE account_id=$1 AND signature=$2
-            """, account_id, signature)
+    async def invalidate_token(cls, pool: Pool, tokenid: UUID = None, signature: str = None):
+        try:
+            if tokenid:
+                async with pool.acquire() as conn:
+                    await conn.execute("""
+                        UPDATE tokens SET valid=false WHERE token_id=$1
+                    """, token_id)
+                token = await cls.fetch_token(pool, tokenid=tokenid)
+            elif signature:
+                async with pool.acquire() as conn:
+                    await conn.execute("""
+                        UPDATE tokens SET valid=false WHERE signature=$1
+                    """, signature)
+                token = await cls.fetch_token(pool, signature=signature)
+
+            if not token:
+                return None
+
+            return token
+
+        except Exception as e:
+            raise e
 
     @classmethod
-    async def check_token(cls, pool: Pool, token: str) -> Optional[Token]:
+    async def validate(cls, pool: Pool, tokenid: UUID = None, signature: str = None) -> Optional[Token]:
         """
             Check the validity of a token.
         """
         try:
-
-            async with pool.acquire() as conn:
-                row = await conn.fetchrow("""
-                    SELECT * FROM tokens WHERE signature=$1
-                """, token)
-            if row:
-                expiration = row['expiry']
-                if expiration < datetime.now():
-                    await cls.invalidate_token(pool, row['token_id'])
+            if tokenid:
+                token = await cls.fetch_token(pool, tokenid=tokenid)
+                if not token:
                     return None
-                return Token(**dict(row))
-            return None
+
+            elif signature:
+                token = await cls.fetch_token(pool=pool, signature=signature)
+                if not token:
+                    return None
+                
+            expiration = token.expiry
+
+            if expiration >= datetime.now() or token.valid == False:
+                token = await cls.invalidate_token(pool, token.token_id)
+                return None
+
+            return token
+
         except Exception as e:
             raise e
 

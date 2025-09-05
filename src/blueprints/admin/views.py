@@ -6,46 +6,166 @@ from returns.maybe import Maybe, Some, Nothing
 
 import pprint
 
+async def view_destinations(request: Request):
+    try:
+        app = rrquest.app
+        pool = app.ctx.pool
 
-async def view_trips(request: Request):
-    """ Loads trip data """
-    
+        tripCtx = app.tripCtx
+        tripService = tripCtx['TripService']
+
+        destinations = await tripService.fetch_destinations(pool)
+
+        return sanjson(body={'data': destinations if destinations else None})
+    except Exception as e:
+        raise e
+
+async def new_destination(request: Request):
     try:
         app = request.app
         pool = app.ctx.pool
         tripCtx = app.ctx.tripCtx
-        tripService = tripCtx["TripService"]
-        tripStatus = tripCtx['TripStatus']
+        tripService = tripCtx['TripService']
 
-        trip_array = tripService.trips
+        form_data = request.json
+        pprint.pp(form_data)
+        destination = tripCtx['Destination'](name=form_data['name'], price=form_data['price'])
 
-        match trip_array:
-            case [*Trip] as trips:
-                trip_cast = trips.copy()
-                new_trip_array = []
-                for trip in trip_cast:
-                    trip = dict(trip)
-                    trip['trip_id'] = trip['trip_id'].hex
-                    trip['date'] = trip['date'].isoformat()
-                    trip['status'] = trip['status'].value
+        exists = await tripService.fetch_destination(pool, destination.name)
+        if exists:
+            return sanjson(body={'info': 'Destination exists'})
+        data = await tripService.create_destination(pool, destination)
+        data['destination_id'] = data['destination_id'].hex
 
-                    new_trip_array.append(trip)
-    
-                return sanjson(
-                    status=200,
-                        body={
-                        "trips": new_trip_array
-                    }
-                )
-            case []:
-                return sanjson(
-                    status=200,
-                    body={
-                        "trips": []
-                    }
-                )
+        return sanjson(body={'data': data})
     except Exception as e:
         raise e
+
+async def view_accounts(request: Request):
+    """ View and manage accounts """
+    try:
+        app = request.app
+        pool = app.ctx.pool
+        templateEnv = app.ctx.template_env
+        template = templateEnv.get_template('admin/accounts.html')
+
+        accountCtx = app.ctx.accountCtx
+        Account = accountCtx['Account']
+        accountService = accountCtx['AccountService']
+
+        accounts = await accountService.fetch(pool)
+    
+        if not accounts:
+            return sanhtml(template.render(accounts=[]))
+
+        pprint.pp(accounts)
+   
+        for account in accounts:
+            account['account_id'] = account['account_id'].hex
+            account['join_date'] = account['join_date'].isoformat()
+
+            if account['admin']:
+                account['admin']['admin_id'] = account['admin']['admin_id'].hex
+                account['admin']['account_id'] = account['admin']['account_id'].hex
+                # account['admin']['role'] = account['admin']['role']
+                account['admin']['date'] = account['admin']['date'].isoformat()
+            
+            if account['trips']:
+                for trip in account['trips']:
+                    trip['trip_id'] = trip['trip_id'].hex
+                    trip['date'] = trip['date'].isoformat()
+
+        return sanhtml(template.render(accounts=accounts))
+
+    except Exception as e:
+        raise e
+
+async def fetch_accounts(request: Request):
+    """ 
+        Retrieve data on accounts
+        Method: Get
+    """
+    try:
+        app = request.app
+        pool = app.ctx.pool
+
+        accountCtx = app.ctx.accountCtx
+        Account = accountCtx['Account']
+        accountService = accountCtx['AccountService']
+
+        accounts = await accountService.fetch(pool)
+    
+        if not accounts:
+            return sanjson(body={'data': []})
+   
+        for account in accounts:
+            account['account_id'] = account['account_id'].hex
+            account['join_date'] = account['join_date'].isoformat()
+
+            if account['admin']:
+                account['admin']['admin_id'] = account['admin']['admin_id'].hex
+                account['admin']['account_id'] = account['admin']['account_id'].hex
+                # account['admin']['role'] = account['admin']['role']
+                account['admin']['date'] = account['admin']['date'].isoformat()
+            
+            if account['trips']:
+                for trip in account['trips']:
+                    trip['trip_id'] = trip['trip_id'].hex
+                    trip['date'] = trip['date'].isoformat()
+
+        # pprint.pp(trips)
+        return sanjson(body={'data': accounts})
+
+    except Exception as e:
+        raise e
+
+async def view_trips(request: Request):
+    """ Loads trip data """
+
+    try:
+        app = request.app
+        pool = app.ctx.pool
+        templateEnv = app.ctx.template_env
+        template = templateEnv.get_template('main/trips.html')
+
+        return sanhtml(template.render())
+
+    except Exception as e:
+        raise e
+
+async def fetch_trips(request: Request):
+    """ 
+        Retrieve data on available trips
+        Method: Get
+    """
+    try:
+        app = request.app
+        pool = app.ctx.pool
+        tripCtx = app.ctx.tripCtx
+        Trip = tripCtx['Trip']
+        tripStatus = tripCtx['TripStatus']
+        tripService = tripCtx['TripService']
+
+        trips = await tripService.fetch(pool)
+    
+        if not trips:
+            return sanjson(body={'data': []})
+   
+        for trip in trips:
+            trip['trip_id'] = trip['trip_id'].hex
+            trip['date'] = trip['date'].isoformat()
+            
+            if trip['slots']:
+                for slot in trip['slots']:
+                    slot['account_id'] = slot['account_id'].hex
+                    slot['join_date'] = slot['join_date'].isoformat()
+
+        # pprint.pp(trips)
+        return sanjson(body={'data': trips})
+
+    except Exception as e:
+        raise e
+
 
 async def create_trip(request: Request):
     """ 
@@ -56,7 +176,7 @@ async def create_trip(request: Request):
     """
  
     app = request.app       # The Sanic app instance
-    print('Application blueprints: ', app.blueprints)
+    # print('Application blueprints: ', app.blueprints)
     # bp = app.bl
     pool = app.ctx.pool     # Database connection pool
     tripCtx = app.ctx.tripCtx
@@ -66,6 +186,7 @@ async def create_trip(request: Request):
     Trip = tripCtx['Trip']     # Trip class object (not instance!)
 
     trip_data = request.json    # Form data submitted
+    pprint.pp(trip_data)
     match trip_data:
         case None:
             return sanjson(
@@ -115,10 +236,11 @@ async def create_trip(request: Request):
     )
     print(new_trip)
 
-    save_trip = await tripService.create_trip(pool, new_trip)
-    print("New Trip: ", save_trip)
-            
-    if not save_trip:
+    await tripService.create_trip(pool, new_trip)
+    saved_trip = await tripService.fetch_trip(new_trip.trip_id)
+    print("New Trip: ", saved_trip)
+    
+    if not saved_trip:
         return sanjson(
             status=404, 
             body={
@@ -133,7 +255,7 @@ async def create_trip(request: Request):
         body = {
            'status': 'ok',
            'msg': 'Trip created',
-           'data': {'trip': save_trip}
+           'data': {'trip': saved_trip}
         }
     )
            
@@ -155,7 +277,6 @@ async def cancel_trip(request: Request, trip_id: str):
         Cancels trip before completion
         Method: Put
     """
-    
 
 class TripView(HTTPMethodView):
     async def get(self, request: Request, trip_id: str):
@@ -201,94 +322,76 @@ async def new_admin(request: Request) -> sanjson:
         adminCtx = app.ctx.adminCtx
 
         new_admin_data = request.json
+        pprint.pp(f"New Admin Data: {new_admin_data}")
 
         if not new_admin_data:
             return sanjson(status=400, body={'info': 'Missing required data'})
-        match new_admin_data:
-            case {'accountid': accountid, 'role': role}:
-                match accountService.accounts:
-                    case [Account as acct] if acct.account_id.hex == acct_id:
-                        if acct.is_admin:
-                            return sanjson(body={
-                                "info": "User is already admin"
-                            })
+        if 'accountid' in new_admin_data and 'role' in new_admin_data:
+            account = await accountService.fetch_user(pool=pool, accountid=new_admin_data['accountid'])
+            if account:
+                if acct.is_admin:
+                    return sanjson(body={
+                        "info": "User is already admin"
+                    })
 
-                        newAdmin = adminCtx["Admin"](
-                            account_id=acct.account_id,
-                            role=adminCtx["AdminRole"](role).value
-                        )
-                        acct.admin=newAdmin
+                newAdmin = adminCtx["Admin"](
+                    account_id=acct.account_id,
+                    role=adminCtx["AdminRole"](role).value
+                )
+                acct.admin=newAdmin
 
-                        async with pool.acquire() as conn:
-                            await conn.execute("""INSERT INTO admin (
-                                admin_id,
-                                account_id,
-                                role,
-                                date
-                            ) VALUES ($1, $2, $3, $4)""", newAdmin.admin_id, newAdmin.account_id, newAdmin.role.value, newAdmin.date)
+                async with pool.acquire() as conn:
+                    await conn.execute("""INSERT INTO admin (
+                        admin_id,
+                        account_id,
+                        role,
+                        date
+                    ) VALUES ($1, $2, $3, $4)""", newAdmin.admin_id, newAdmin.account_id, newAdmin.role.value, newAdmin.date)
 
-                        new_admin = dict(newAdmin)
-                        new_admin['admin_id'] = new_admin['admin_id'].hex
-                        new_admin['account_id']  = new_admin['account_id'].hex
-                        new_admin['role'] = new_admin['role'].value
-                        new_admin['date'] = new_admin['date'].isoformat()
+                new_admin = dict(newAdmin)
+                new_admin['admin_id'] = new_admin['admin_id'].hex
+                new_admin['account_id']  = new_admin['account_id'].hex
+                new_admin['role'] = new_admin['role'].value
+                new_admin['date'] = new_admin['date'].isoformat()
 
-                        return sanjson(status=201, body={
-                            'info': 'Operation succesful',
-                            'data': new_admin
-                        })
+                return sanjson(status=201, body={
+                    'info': 'Operation succesful',
+                    'data': new_admin
+                })
     
-
-                    case _:
-                        return sanjson(
-                            status=400,
-                            body={
-                                "info": "Unable to complete operation"
-                            }
-                        )
-            case {'email': email, 'role': role}:
-                match accountService.accounts:
-                    case [Account as acct] if acct.email == email:
-                        if acct.is_admin:
-                            return sanjson(body={
-                                "info": "User is already admin"
-                            })
-
-                        newAdmin = adminCtx["Admin"](
-                            account_id=acct.account_id,
-                            role=adminCtx["AdminRole"](role).value
-                        )
-                        acct.admin=newAdmin
-
-                        async with pool.acquire() as conn:
-                            await conn.execute("""INSERT INTO admin (
-                                admin_id, 
-                                account_id, 
-                                role, 
-                                date
-                            ) VALUES ($1, $2, $3, $4)""", newAdmin.admin_id, newAdmin.account_id, newAdmin.role.value, newAdmin.date)
-    
-                        new_admin = dict(newAdmin)
-                        new_admin['admin_id'] = new_admin['admin_id'].hex
-                        new_admin['account_id']  = new_admin['account_id'].hex
-                        new_admin['role'] = new_admin['role'].value
-                        new_admin['date'] = new_admin['date'].isoformat()
-
-                        return sanjson(status=201, body={'info': 'Operation succesful', 'data': new_admin})
-
-                    case _:
-                        return sanjson(
-                            status=400,
-                            body={
-                                "info": "Unable to complete operation"
-                            }
-                        )
-
-            case _:
-                return sanjson(status=500, body={
-                    'info': 'Invalid data'
+        elif 'email' in new_admin_data and 'role' in new_admin_data:
+            account = await accountService.fetch_user(pool=pool, email=new_admin_data['email'])
+            print(f"All accounts data:")
+            pprint.pp(account)
+            if account['is_admin']:
+                return sanjson(body={
+                    "info": "User is already admin"
                 })
 
+            newAdmin = adminCtx["Admin"](
+                account_id=account['account_id'],
+                role=adminCtx["AdminRole"](new_admin_data['role']).value
+            )
+            account['admin']=newAdmin.model_dump()
+
+            async with pool.acquire() as conn:
+                await conn.execute("""INSERT INTO admin (
+                    admin_id, 
+                    account_id, 
+                    role, 
+                    date
+                ) VALUES ($1, $2, $3, $4)""", newAdmin.admin_id, newAdmin.account_id, newAdmin.role.value, newAdmin.date)
+                await conn.execute("""
+                    UPDATE accounts SET is_admin=true WHERE email=$1
+                """, new_admin_data['email'])
+    
+            new_admin = dict(newAdmin)
+            new_admin['admin_id'] = new_admin['admin_id'].hex
+            new_admin['account_id']  = new_admin['account_id'].hex
+            new_admin['role'] = new_admin['role'].value
+            new_admin['date'] = new_admin['date'].isoformat()
+
+            return sanjson(status=201, body={'info': 'Operation succesful', 'data': new_admin})
 
     except Exception as e:
         raise e
