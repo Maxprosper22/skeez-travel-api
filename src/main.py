@@ -10,7 +10,7 @@ from pathlib import Path
 from asyncio import create_subprocess_shell
 from asyncio.subprocess import PIPE
 
-import httpx
+import httpx, aiohttp
 
 from src.utils.db import db_conn, db_pool
 from src.utils.templating import setupTemplating
@@ -228,7 +228,8 @@ def create_app() -> Sanic:
         app.ctx.PaystackConfig = await load_paystack_config(config)
 
         # Set up aiohttp ClientSession
-        pprint.pp(help(httpx))
+        app.ctx.aiohttpClient = aiohttp.ClientSession()
+        # httpxClient
         app.ctx.httpxClient = httpx.AsyncClient()
         # Set up templating
         app.ctx.template_env = await setupTemplating(app)

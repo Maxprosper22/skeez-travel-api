@@ -219,7 +219,7 @@ async def book(request: Request, tripid: str):
 
         paystackConfig = app.ctx.PaystackConfig
 
-        httpxClient = app.ctx.httpxClient
+        aiohttpClient = app.ctx.aiohttpClient
 
         accountCtx = app.ctx.accountCtx
         accountService = accountCtx['AccountService']
@@ -243,18 +243,19 @@ async def book(request: Request, tripid: str):
         if not trip:
             return sanjson(status=404, body={'info': 'Trip not found'})
 
-        user = await accountService.fetch_user(pool=pool, accountid=UUID(hex=trip_data['accountid']))
+        user = await accountService.fetch_user(pool=pool, accountid=UUID(hex=booking_info['accountid']))
         if not user:
             return sanjson(status=403, body={'info': 'Forbidden'})
 
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {paystackConfig['SECRET_KEY']}"
-        }
-        payload = {'email': user['email'], 'amount': trip.destination.price}
-        async with httpxClient.post('api.paystack.co/transaction/initialize', data=payload, headers=headers) as resp:
-            pprint.pp(resp)
-            response = resp.json()
+        # headers = {
+        #     "Content-Type": "application/json",
+        #     "Authorization": f"Bearer {paystackConfig['SECRET_KEY']}"
+        # }
+        # payload = {'email': user['email'], 'amount': trip.destination.price}
+        # async with aiohttpClient as session:
+        #     session.post('api.paystack.co/transaction/initialize', json=payload, headers=headers) as resp:
+        #         pprint.pp(resp)
+        #         response = resp.json()
 
         async with pool.acquire() as conn:
             ticket = await conn.fetchrow("SELECT * FROM tickets WHERE trip_id=$1 AND account_id=$2", booking_info["tripid"], booking_info["accountid"])

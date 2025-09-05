@@ -29,6 +29,7 @@ dependencies = [
     "apscheduler>=3.11.0",
     "paystack-sdk>=1.0.1",
     "httpx>=0.28.1",
+    "aiohttp[speedups]>=3.12.15",
 ]
 
 [build-system]
