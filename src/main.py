@@ -18,7 +18,7 @@ from src.utils.templating import setupTemplating
 from src.services import register_services
 from src.blueprints import register_apps
 
-from src.services.mail import load_mail_config
+# from src.services.mail import load_mail_config
 
 from src.middlewares import setup_middleware
 from src.urls import router
@@ -94,9 +94,6 @@ def create_app() -> Sanic:
     # Configuration
     app.config.FRONTEND_DIR = Path(__file__).parent.parent / "skrid-web"
     app.config.DIST_DIR = app.config.FRONTEND_DIR / "dist"
-
-    pprint.pp(f"Frontend directory: {app.config.FRONTEND_DIR}")
-    pprint.pp(f"Dist dir: {app.config.DIST_DIR}")
 
     # Serve static assets (JS, CSS, etc.) from dist/assets
     app.static("/assets", app.config.DIST_DIR / "assets", name="assets")
@@ -222,7 +219,7 @@ def create_app() -> Sanic:
 
 
         # Load email config
-        app.ctx.mailConfig = await load_mail_config(config)
+        # app.ctx.mailConfig = await load_mail_config(config)
 
         # Set up paystack configuration
         app.ctx.PaystackConfig = await load_paystack_config(config)
