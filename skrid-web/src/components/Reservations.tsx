@@ -4,18 +4,20 @@ import { useAuth } from '@/auth'
 import type { AccountType } from '@/auth'
 import { useTripCtx } from '@/trips'
 
-export const ReservationCTA = ({ tripid, slots }: {tripid: string, slots: Array<AccountType>}) => {
+  export const ReservationCTA = ({ tripid, slots }: {tripid: string, slots?: Array<AccountType | null>}) => {
   const [isBooked, setIsBooked] = useState<boolean>(false)
   const auth = useAuth()
   const tripCtx = useTripCtx()
 
-  const bookBtn = useRef('book-btn')
-  const unBookBtn = useRef('unbook-btn')
+  console.log(auth.user)
+
+  const bookBtn = useRef<HTMLButtonElement>(null)
+  const unBookBtn = useRef<HTMLButtonElement>(null)
 
   useEffect(()=>{
-    slots.forEach(element => {
+    slots?.forEach(element => {
       console.log(element)
-      if (element.account_id == auth.user.account_id) {
+      if (element?.account_id == auth.user?.account_id) {
         setIsBooked(true)
         // bookBtn.current.disabled = true
       }
@@ -25,7 +27,7 @@ export const ReservationCTA = ({ tripid, slots }: {tripid: string, slots: Array<
   const handleBooking = async () => {
     const req = await fetch(`http://127.0.0.1:8080/trip/${tripid}/book`, {
       method: 'POST',
-      body: JSON.stringify({'tripid': tripid, 'accountid': auth.user.account_id})
+      body: JSON.stringify({'tripid': tripid, 'accountid': auth.user?.account_id})
     })
     console.log(req)
     const resp = await req.json()
@@ -36,8 +38,8 @@ export const ReservationCTA = ({ tripid, slots }: {tripid: string, slots: Array<
     }
     
     const trip = tripCtx.trips.get(tripid)
-    const tripSlots = trip.slots
-    tripSlots.push(auth.user)
+    const tripSlots = trip!.slots
+    tripSlots?.push(auth.user)
     tripCtx.updateTrip(tripid, 'slots', tripSlots)
     setIsBooked(true)
   }
@@ -45,17 +47,17 @@ export const ReservationCTA = ({ tripid, slots }: {tripid: string, slots: Array<
   const cancelBooking = async () => {
     const req = await fetch(`http://127.0.0.1:8080/trip/${tripid}/unbook`, {
       method: 'POST',
-      body: JSON.stringify({'tripid': tripid, 'accountid': auth.user.account_id})
+      body: JSON.stringify({'tripid': tripid, 'accountid': auth.user?.account_id})
     })
     console.log(req)
     const resp = await req.json()
     console.log(resp.status)
     if (req.status == 200) {
       console.log(slots)
-      const newSlots = slots
-      newSlots.forEach(element => {
-        if (element.account_id == auth.user.account_id) {
-          const indexValue = newSlots.indexOf(element)
+      const newSlots = slots!
+      newSlots?.forEach(element => {
+        if (element?.account_id == auth.user?.account_id) {
+          const indexValue = newSlots?.indexOf(element)
           newSlots.splice(indexValue,1)
         }
       });

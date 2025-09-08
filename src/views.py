@@ -282,6 +282,7 @@ async def unbook(request: Request, tripid: str):
         tripService = tripCtx['TripService']
 
         unbook_data = request.json
+        pprint.pp(unbook_data)
 
         async with pool.acquire() as conn:
             ticket = await conn.fetchrow("SELECT * FROM tickets WHERE trip_id=$1 AND account_id=$2", unbook_data['tripid'], unbook_data['accountid'])

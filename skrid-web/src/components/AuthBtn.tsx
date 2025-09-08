@@ -1,7 +1,7 @@
 import { useAuth } from '@/auth'
 
-export const AuthBtn = ({value}: string) => {
-  const { toggleAuthForm, login, signup, logout } = useAuth()
+export const AuthBtn = ({value}: {value:string}) => {
+  const { toggleAuthForm, login, logout } = useAuth()
   // console.log(value)
   return (
     <>

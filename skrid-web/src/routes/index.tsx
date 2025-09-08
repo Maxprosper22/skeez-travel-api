@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ChangeEvent, MouseEvent } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { useAuth } from '@/auth'
@@ -28,15 +29,15 @@ function App() {
   const [showCreateTripModal, setCreateTripModal] = useState<boolean>(false)
   const [showDestinationModal, setDestinationModal] = useState<boolean>(false)
   
-  const toggleHistoryModal = (e) => {
+  const toggleHistoryModal = (e: MouseEvent<HTMLDivElement>) => {
     setHistoryModal(!showHistoryModal)
   }
 
-  const toggleCreateTripModal = (e) => {
+  const toggleCreateTripModal = (e: MouseEvent<HTMLDivElement>) => {
     setCreateTripModal(!showCreateTripModal)
   }
 
-  const toggleDestinationModal = (e) => {
+  const toggleDestinationModal = (e: MouseEvent<HTMLDivElement>) => {
     setDestinationModal(!showDestinationModal)
   }
 
@@ -52,9 +53,9 @@ function App() {
         </div>
         <div className="flex flex-wrap justify-start items-center min-h-4 w-[80%] gap-x-2">
         { auth.isAuthenticated ? <>
-          <span className="font-bold text-lg">{auth.user.lastname}</span>
-          <span className="font-bold text-lg">{auth.user.firstname}</span>
-          {auth.user.othername ? <span className="font-bold text-lg">{auth.user.othername}</span> : ""}
+          <span className="font-bold text-lg">{auth.user?.lastname}</span>
+          <span className="font-bold text-lg">{auth.user?.firstname}</span>
+          {auth.user?.othername ? <span className="font-bold text-lg">{auth.user?.othername}</span> : ""}
         </> : <span className="font-bold text-lg">Lovely Guest</span>
         }
         </div>
@@ -72,30 +73,30 @@ function App() {
 
       {auth.isAuthenticated ? 
       <div className="grid grid-cols-5 max-w-[90%] py-2 gap-4  rounded-2xl">
-        {auth.user.is_admin ?
+        {auth.user?.is_admin ?
         <div onClick={(e) => toggleCreateTripModal(e)} className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
           <IoCreateOutline size={28} />
           <span className="flex justify-center items-center w-full font-bold text-sm">New Trip</span>
         </div>
         : ""}
-        <div onClick={(e)=> toggleHistoryModal()} className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
+        <div onClick={(e)=> toggleHistoryModal(e)} className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
           <MdOutlineHistory size={28} />
           <span className="flex justify-center items-center w-full font-bold text-sm">History</span>
         </div>
 
         {/* {auth.user.is_admin ?*/}
-        <div onClick={(e)=>toggleDestinationModal()} className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
+        <div onClick={(e)=>toggleDestinationModal(e)} className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
           <MdLocationPin size={28} />
           <span className="flex justify-center items-center w-full font-bold text-sm">Destinations</span>
         </div>
         {/*: ""*/}
-        {auth.user.is_admin ?
+        {auth.user?.is_admin ?
         <div className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
           <MdPeople size={28} />
           <span className="flex justify-center items-center w-full font-bold text-sm">Users</span>
         </div>
         : ""}
-        {auth.user.is_admin ?
+        {auth.user?.is_admin ?
         <div className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
           <MdOutlinePayment size={28} />
           <span className="flex justify-center items-center w-full font-bold text-sm">Payment</span>
@@ -114,17 +115,17 @@ function App() {
         <div className="flex justify-between items-center w-full h-12">
           <div className="flex justify-start items-center min-w-[40%] gap-2">
             <h4 className="font-bold text-xl">Available trips:</h4>
-            <span className="text-gray">{tripCtx.trips.size}</span>
+            <span className="text-gray">{tripCtx.trips?.size}</span>
           </div>
 
           <div className="flex justify-center items-center w-full">
             {auth.isAuthenticated ? 
             <div className="flex flex-row justify-end items-center w-full rounded-2xl">
-              <div onClick={(e)=> toggleHistoryModal()} className="flex flex-col justify-center items-center w-15 h-15">
+              <div onClick={(e)=> toggleHistoryModal(e)} className="flex flex-col justify-center items-center w-15 h-15">
                 <MdOutlineHistory size={28} />
                 {/*<span className="flex justify-center items-center w-full font-bold text-sm">History</span>*/}
               </div>
-              {auth.user.is_admin ?
+              {auth.user?.is_admin ?
               <div onClick={(e)=>toggleCreateTripModal(e)} className="flex flex-col justify-center items-center w-15 h-15">
                 <IoCreateOutline size={28} />
                 {/*<span className="flex justify-center items-center w-full font-bold text-sm">New Trip</span>*/}

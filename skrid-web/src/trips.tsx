@@ -2,21 +2,22 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 import { useAuth } from '@/auth'
+import type { AccountType } from '@/auth'
 
 export enum StatusEnum {
-  Pending = "pending",
-  Active = "active",
-  Cancelled = "cancelled",
-  Complete = "complete"
+  PENDING = "pending",
+  ACTIVE = "active",
+  CANCELLED = "cancelled",
+  COMPLETE = "complete"
 }
 
 export interface TripContext {
   trips: Map<string, TripType>;
   destinations: Map<string, DestinationType>;
-  createTrip: () => void;
+  createTrip: (trip: newTripType) => void;
   fetchTrips: () => void;
   updateTrip: <K extends keyof TripType>(key: string, property: K, value: TripType[K]) => void;
-  createDestination: () => void;
+  createDestination: (newDest: newDestinationType) => void;
   fetchDestinations: () => void;
 }
 
@@ -36,12 +37,12 @@ export interface TripType {
   trip_id: string;
   destination: DestinationType;
   capacity: number;
-  slots: Array<TripSlot> | null;
+  slots: Array<AccountType | null>;
   status: StatusEnum;
   date: Date;
 }
 
-export type newTripType = Omit<TripType, "slots"> & {trip_id?: string, slots?: Array<TripSlot> | null}
+export type newTripType = Omit<TripType, "trip_id" | "slots"> & {trip_id?: string, slots?: Array<AccountType | null>}
 
 const TripContext = createContext<TripContext | undefined>(undefined)
 
@@ -49,13 +50,15 @@ export const TripProvider = ({children}: {children: ReactNode}) => {
   const [trips, setTrips] = useState<Map<string, TripType>>(new Map())
   const [destinations, setDestinations] = useState<Map<string, DestinationType>>(new Map())
 
-  const auth = useAuth
+  const auth = useAuth()
   
   const createTrip = async (trip: newTripType) => {
     console.log(trip)
     const req = await fetch('http://127.0.0.1:8080/admin/trip/create', {
       method: "POST",
-      Authorization: `Bearer ${auth.token}`,
+      headers: {
+        Authorization: `Bearer ${auth.token}`,
+      },
       body: JSON.stringify(trip)
     })
     const resp = await req.json()
@@ -73,7 +76,7 @@ export const TripProvider = ({children}: {children: ReactNode}) => {
     const resp: {info: string | null, data?: Array<TripType>} = await req.json()
     if (resp.data) {
       const data: Array<TripType> = resp.data
-      setTrips((oldData)=>{
+      setTrips((oldData: Map<string, TripType>)=>{
         const newTripMap = new Map(oldData)
         for (let i=0; i<data.length; i++) {
           newTripMap.set(data[i].trip_id, data[i])
@@ -100,7 +103,7 @@ export const TripProvider = ({children}: {children: ReactNode}) => {
     console.log("Property " + property)
     console.log("Value " + value)
 
-    setTrips((prevTripsMap) => {
+    setTrips((prevTripsMap: Map<string, TripType>) => {
       console.log(prevTripsMap)
       const newUpdate = new Map(prevTripsMap)
       const tripData = newUpdate.get(key)
@@ -115,7 +118,9 @@ export const TripProvider = ({children}: {children: ReactNode}) => {
     try {
       const req = await fetch('http://127.0.0.1:8080/admin/destinations/new', {
         method: "POST",
-        Authorization: `Bearer ${auth.token}`,
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
         body: JSON.stringify(newDest)
       
       })

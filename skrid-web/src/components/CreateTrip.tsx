@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react'
+import type { ChangeEvent, MouseEvent } from 'react';
 import { useAuth } from '@/auth';
 import { useTripCtx, StatusEnum } from '@/trips';
 import type { DestinationType, newTripType } from '@/trips'
@@ -9,7 +10,7 @@ import { IoInformationCircleOutline } from 'react-icons/io5'
 
 interface CreateTripProps {
   showCreateTripModal: boolean;
-  toggleCreateTripModal: () => void;
+  toggleCreateTripModal: (e: MouseEvent<HTMLDivElement>) => void;
 }
 
 export const CreateTripModal = ({ showCreateTripModal, toggleCreateTripModal } : CreateTripProps) => {
@@ -20,19 +21,17 @@ export const CreateTripModal = ({ showCreateTripModal, toggleCreateTripModal } :
   const auth = useAuth()
   const tripCtx = useTripCtx()
 
-  const createTripModal = useRef('create-trip-modal')
+  const createTripModal = useRef<HTMLDivElement>(null)
 
-  const handleModal = (e) => {
-    if (e.target != createTripModal.current) {
-      return
-    } else {
-      toggleCreateTripModal()
+  const handleModal = (e: MouseEvent<HTMLDivElement>) => {
+  if (e.target == createTripModal.current) {
+      toggleCreateTripModal(e)
     }
   }
 
   const [destinationValue, setDestinationValue] = useState<DestinationType | null>(null)
   const [dateValue, setDateValue] = useState<Date | null>(null)
-  const [statusValue, setStatusValue] = useState<StatusEnum | null>(null)
+  const [statusValue, setStatusValue] = useState<keyof typeof StatusEnum>("PENDING")
   const [capacityValue, setCapacityValue] = useState<number | null>(null)
   const [priceValue, setPriceValue] = useState<number | null>(null)
 
@@ -42,56 +41,57 @@ export const CreateTripModal = ({ showCreateTripModal, toggleCreateTripModal } :
   const [showCapacityError, setCapacityError] = useState<boolean>(false)
   const [showPriceError, setPriceError] = useState<boolean>(false)
 
-  const destinationRef = useRef('destination-ref')
-  const priceRef = useRef('price-ref')
-  const statusRef = useRef('status-ref')
+  const destinationRef = useRef<HTMLSelectElement>(null)
+  const priceRef = useRef<HTMLInputElement>(null)
+  const statusRef = useRef<HTMLSelectElement>(null)
 
-  useEffect(()=>{
-    const defaultDestination = tripCtx.destinations.get(destinationRef.current.value)
-    if (defaultDestination) {
-      console.log(defaultDestination)
-      setDestinationValue(defaultDestination)
-      priceRef.current.value = defaultDestination.price
-      setPriceValue(priceRef.current.value)
-    }
-    const defaultStatus = statusRef
-    if (defaultStatus) {
-      // console.log('Default status: ')
-      // console.log(defaultStatus)
-      setStatusValue(defaultStatus.current.value)
-    }
-  }, [])
+  // useEffect(()=>{
+    // const defaultDestination = tripCtx.destinations.get(destinationRef.current.value)
+    // if (defaultDestination) {
+    //   console.log(defaultDestination)
+    //   setDestinationValue(defaultDestination)
+    //   priceRef.current.value = defaultDestination.price
+    //   setPriceValue(priceRef.current.value)
+    // }
+    // const defaultStatus = statusRef
+    // if (defaultStatus) {
+    //   // console.log('Default status: ')
+    //   // console.log(defaultStatus)
+    //   setStatusValue(defaultStatus.current.value)
+    // }
+  // }, [])
 
-  const handleDestinationField =(e)=> {
-    const destValue = tripCtx.destinations.get(e.target.value)
+  const handleDestinationField =(e: ChangeEvent<HTMLSelectElement>)=> {
+    console.log(e)
+    const destValue = tripCtx.destinations.get(e.target?.value)
     if (destValue) {
       setDestinationValue(destValue)
-      priceRef.current.value = destValue.price
+      setPriceValue(destValue.price)
     }
     if (showDestinationError) {
       setDestinationError(!showDestinationError)
     }
   }
-  const handleDateField = (e)=> {
-    setDateValue(e.target.value)
+  const handleDateField = (e: ChangeEvent<HTMLInputElement>)=> {
+    setDateValue(new Date(e.target.value))
     if (showDateError) {
       setDateError(!showDateError)
     }
   }
-  const handleStatusField = (e) => {
-    setStatusValue(e.target.value)
+  const handleStatusField = (e: ChangeEvent<HTMLSelectElement>) => {
+    setStatusValue(e.target.value as keyof typeof StatusEnum)
     if (showStatusError) {
       setStatusError(!showStatusError)
     }
   }
-  const handleCapacityField = (e) => {
-    setCapacityValue(e.target.value)
+  const handleCapacityField = (e: ChangeEvent<HTMLInputElement>) => {
+    setCapacityValue(Number(e.target.value))
     if (showCapacityError) {
       setCapacityError(!showCapacityError)
     }
   }
-  const handlePriceField = (e) => {
-    setPriceValue(e.target.value)
+  const handlePriceField = (e: ChangeEvent<HTMLInputElement>) => {
+    setPriceValue(Number(e.target.value))
     if (showPriceError) {
       setPriceError(!showPriceError)
     }
@@ -111,7 +111,7 @@ export const CreateTripModal = ({ showCreateTripModal, toggleCreateTripModal } :
         setPriceError(!showPriceError)
       } else {
         console.log(destinationValue)
-        await tripCtx.createTrip({destination:destinationValue, capacity:capacityValue, status:statusValue, date:dateValue})
+        await tripCtx.createTrip({destination:destinationValue, capacity:capacityValue, status:StatusEnum[statusValue], date:dateValue})
       }
     } catch (error) {
       console.log(error)
@@ -147,8 +147,8 @@ export const CreateTripModal = ({ showCreateTripModal, toggleCreateTripModal } :
           <div className="flex flex-col justify-center items-center w-full gap-y-2">
             <span className="flex justify-start items-center w-full font-bold text-sm">Status</span>
             <select ref={statusRef} onChange={(e)=> handleStatusField(e)} className="w-full h-10 rounded-lg bg-slate-900 px-2 active:outline text-sm">
-              <option value={StatusEnum.Pending}>Pending</option>
-              <option value={StatusEnum.Active}>Active</option>
+              <option value={StatusEnum.PENDING}>Pending</option>
+              <option value={StatusEnum.ACTIVE}>Active</option>
             </select>
             {showStatusError ? <div className="flex justify-start items-center w-full font-bold text-sm text-red-500 gap-x-1">
               <IoInformationCircleOutline size={24} />

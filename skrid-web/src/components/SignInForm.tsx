@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+import type { ChangeEvent, MouseEvent } from 'react'
+
 import { useAuth } from '@/auth';
 
 export const SignInForm = () => {
@@ -7,16 +9,16 @@ export const SignInForm = () => {
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
 
-  const modal = useRef('modal')
+  const modal = useRef<HTMLDivElement>(null)
 
-  const populateEmail = async (e) => {
-    setEmail(e.target.value)
+  const populateEmail = async (e: ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target?.value)
   }
-  const populatePassword = async (e) => {
-    setPassword(e.target.value)
+  const populatePassword = async (e: ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target?.value)
   }
 
-  const doLogin = async (e) => {
+  const doLogin = async () => {
     if (!email) {
       alert('Email is required!')
       return
@@ -27,10 +29,8 @@ export const SignInForm = () => {
     await auth.login(email, password)
   }
 
-  const handleModal = (e) => {
-    if (e.target != modal.current) {
-      return
-    } else {
+  const handleModal = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.target == modal.current) {
       auth.toggleAuthForm('signin')
     }
   }
@@ -60,7 +60,7 @@ export const SignInForm = () => {
           </div>
         </div>
         <button
-          onClick={(e)=> doLogin(e)}
+          onClick={(e)=> doLogin()}
           className="flex justify-center items-center w-full h-12 rounded-full bg-blue-800 font-bold text-lg text-white">Sign in</button>
       </div>
     </div>

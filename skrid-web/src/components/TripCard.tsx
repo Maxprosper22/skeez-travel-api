@@ -1,6 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { IoCashOutline, IoPeopleOutline, IoCalendarOutline, IoFilterOutline } from "react-icons/io5";
 // import { HiOutlineHashtag } from "react-icons/hi2";
+//
+import type { TripType } from '@/trips'
 
 export interface TripProps {
   tripid: string;
@@ -12,11 +14,11 @@ export interface TripProps {
   capacity: number;
 }
 
-export const TripCard = ({trip}: TripProps) => {
+export const TripCard = ({trip}: {trip: TripType}) => {
   // console.log(trip)
   trip.date = new Date(trip.date)
   return (
-    <Link to={`trips/${trip.trip_id}`} className="flex flex-col justify-evenly items-center w-full py-2 px-4 gap-2 bg-slate-900 active:bg-slate-800 text-sm font-bold">
+    <Link to="/trips/$tripid" params={{tripid: `${trip.trip_id}`}} className="flex flex-col justify-evenly items-center w-full py-2 px-4 gap-2 bg-slate-900 active:bg-slate-800 text-sm font-bold">
       <div className="flex justify-between items-center w-full h-12">
         <div className="flex justify-start items-center">
           <span className="flex justify-center px-2 rounded-lg p-1 bg-slate-800">{trip.trip_id}</span>

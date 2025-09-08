@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import type { ChangeEvent, MouseEvent } from 'react'
 
 import { useTripCtx } from '@/trips'
 import type { DestinationType } from '@/trips'
@@ -9,21 +10,21 @@ import { MdOutlineAddLocationAlt } from 'react-icons/md'
 
 interface DestinationsProps {
   showDestinationModal: boolean;
-  toggleDestinationModal: () => void;
+  toggleDestinationModal: (e: MouseEvent<HTMLDivElement>) => void;
 }
 interface DestinationFormProps {
   showDestinationForm: boolean;
   toggleDestinationForm: () => void;
 }
 
-const DestinationForm = ({ showDestinationForm, toggleDestinationForm }) => {
+const DestinationForm = ({ showDestinationForm, toggleDestinationForm }: DestinationFormProps) => {
   if (!showDestinationForm) return null
 
   const tripCtx = useTripCtx()
 
-  const formBackdrop = useRef('form-backdrop')
-  const nameRef = useRef('name-ref')
-  const priceRef = useRef('price-ref')
+  const formBackdrop = useRef<HTMLDivElement>(null)
+  const nameRef = useRef<HTMLInputElement>(null)
+  const priceRef = useRef<HTMLInputElement>(null)
 
   const [name, setDestinationName] = useState<string | null>(null)
   const [price, setPrice] = useState<number | null>(null)
@@ -31,12 +32,12 @@ const DestinationForm = ({ showDestinationForm, toggleDestinationForm }) => {
   const [showDestinationError, setDestinationError] = useState<boolean>(false)
   const [showPriceError, setPriceError] = useState<boolean>(false)
 
-  const handleDestInput = (e) => {
-    setDestinationName(e.target.value)
+  const handleDestInput = (e: ChangeEvent<HTMLInputElement>) => {
+    setDestinationName(e.target?.value)
     if (showDestinationError) setDestinationError(false)
   }
-  const handlePriceInput = async (e) => {
-    setPrice(e.target.value)
+  const handlePriceInput = async (e: ChangeEvent<HTMLInputElement>) => {
+    setPrice(Number(e.target?.value))
     if (showPriceError) setPriceError(false)
   }
   const sendNewDestination = async () => {
@@ -49,11 +50,10 @@ const DestinationForm = ({ showDestinationForm, toggleDestinationForm }) => {
       await tripCtx.createDestination({name, price})
     }
   }
-  const handleFormDisplay = (e) => {
-    if (e.target != formBackdrop.current) {
-      return
+  const handleFormDisplay = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.target == e.currentTarget) {
+      toggleDestinationForm()
     }
-    toggleDestinationForm()
   }
   return (
     <div ref={formBackdrop} className="flex flex-col justify-end items-center w-screen h-dvh absolute z-12 bg-slate-900/70" onClick={(e)=> handleFormDisplay(e)}>
@@ -84,7 +84,7 @@ const DestinationForm = ({ showDestinationForm, toggleDestinationForm }) => {
   )
 }
 
-const DestinationItem = ({destination}: DestinationType) => {
+const DestinationItem = ({destination}: {destination: DestinationType}) => {
   console.log(destination.destination_id)
   return (
     <div className="flex justify-center items-center w-full h-20">{destination.name}</div>
@@ -101,14 +101,13 @@ export const Destinations = ({showDestinationModal, toggleDestinationModal}: Des
 
   const [showDestinationForm, setDestinationForm] = useState<boolean>(false)
 
-  const destinationsBackdrop = useRef('destinations-modal')
-  const historyList = useRef('history-list')
+  const destinationsBackdrop = useRef<HTMLDivElement>(null)
+  const historyList = useRef<HTMLDivElement>(null)
 
-  const handleModal = (e) => {
-    if (e.target != destinationsBackdrop.current) {
-      return
+  const handleModal = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.target == destinationsBackdrop.current) {
+      toggleDestinationModal(e)
     }
-    toggleDestinationModal()
   }
 
   const toggleDestinationForm = () => {

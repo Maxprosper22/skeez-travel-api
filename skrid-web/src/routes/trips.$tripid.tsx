@@ -37,7 +37,7 @@ function RouteComponent() {
 
   // const data = Route.useLoaderData()
   let data = tripCtx.trips.get(tripid) 
-  data.date = new Date(data.date)
+  data!.date = new Date(data!.date)
 
   useEffect(()=>{
     data = tripCtx.trips.get(tripid)
@@ -56,21 +56,21 @@ function RouteComponent() {
           <span className="px-4 py-2 font-bold text-sm rounded-full bg-slate-800"># {tripid}</span>
         </div>
         <div className="flex flex-col justify-start items-center w-full divide-y divide-slate-800">
-          <span className="flex justify-start items-center w-full h-20 p-2 font-bold text-4xl">{data.destination.name}</span>
+          <span className="flex justify-start items-center w-full h-20 p-2 font-bold text-4xl">{data!.destination.name}</span>
           <div className="flex justify-start items-center w-full h-16 gap-4">
             <div className="flex justify-center items-center py-2 px-4 gap-2 text-gray text-sm font-bold bg-slate-800 rounded-full">
               <IoCalendarOutline size={24} />
-              <span>{data.date.toLocaleString("en-GB")}</span>
+              <span>{data!.date.toLocaleString("en-GB")}</span>
             </div>
           </div>
           <div className="flex justify-start items-center w-full h-16 gap-4">
             <div className="flex justify-center items-center py-2 px-4 gap-2 text-gray text-sm font-bold bg-slate-800 rounded-full">
               <IoCashOutline size={24} />
-              <span>{data.destination.price}</span>
+              <span>{data!.destination.price}</span>
             </div>
             <div className="flex justify-center items-center py-2 px-4 gap-2 text-gray text-sm font-bold bg-slate-800 rounded-full">
               <IoPeopleOutline size={24} />
-              <span>{data.slots.length}/{data.capacity}</span>
+              <span>{data!.slots?.length}/{data!.capacity}</span>
             </div>
           </div>
         </div>
@@ -82,13 +82,13 @@ function RouteComponent() {
           </div>
 
           <div className="flrx flex-col justify-center items-center w-full rounded-lg bg-slate-900 divide-y divide-slate-800">
-          {data.slots.length > 0 ? data.slots.map((slot)=>
-            <div key={slot.account_id} className="flex justify-center items-center w-full h-14 px-4">
+          {data!.slots? data!.slots?.map((slot)=>
+            <div key={slot?.account_id} className="flex justify-center items-center w-full h-14 px-4">
               <div className="flex justify-center items-center w-full gap-x-4">
                 <div className="flex justify-center items-center p-2 rounded-full bg-slate-800">
                   <IoPerson size={24} />
                 </div>
-                <span className="flex justify-start items-center w-full text-lg font-bold">{slot.firstname} {slot.lastname}</span>
+                <span className="flex justify-start items-center w-full text-lg font-bold">{slot?.firstname} {slot?.lastname}</span>
               </div>
               <div className="flex ">
                 <IoMenu size={24} />
@@ -102,7 +102,7 @@ function RouteComponent() {
         </div>
       </div>
       <div className="row-span-1 col-span-5 flex justify-center items-center h-full w-full">
-        <ReservationCTA tripid={tripid} slots={data.slots} />
+        <ReservationCTA tripid={tripid} slots={data!.slots} />
       </div>
     </div>
   )

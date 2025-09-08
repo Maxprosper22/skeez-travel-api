@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 
+import type { TripType } from '@/trips'
+
 export interface AuthContext {
   user: AccountType | null;
   isAuthenticated: boolean;
   token: string | null;
-  login: () => void;
+  login: (email: string, password: string) => void;
   logout: () => void;
   showSignInForm: boolean;
   showSignUpForm: boolean;
@@ -13,7 +15,7 @@ export interface AuthContext {
 }
 
 export interface AccountType {
-  accountid: string;
+  account_id: string;
   email: string;
   phone: string;
   firstname: string;
@@ -22,10 +24,10 @@ export interface AccountType {
   is_admin: boolean;
   join_date: Date;
   admin: object | null;
-  trips: [object];
+  trips: Array<TripType> | null;
 }
 
-export type SlotType = Omit<AccountType, 'admin', 'trips'>
+export type SlotType = Omit<AccountType, 'admin' | 'trips'>
 
 const AuthContext = createContext<AuthContext | undefined>(undefined)
 
@@ -110,7 +112,7 @@ export const AuthProvider = ({children}: {children: ReactNode}) => {
     const req = await fetch('http://127.0.0.1:8080/account/signout', {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer: ${authToken}`
+        'Authorisation': `Bearer: ${authToken}`
       }
     })
     const resp = await req.json()
@@ -130,7 +132,7 @@ export const AuthProvider = ({children}: {children: ReactNode}) => {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, authToken, login, logout, showSignInForm, showSignUpForm, toggleAuthForm }}>
+    <AuthContext.Provider value={{ user, isAuthenticated,  token:authToken, login, logout, showSignInForm, showSignUpForm, toggleAuthForm }}>
       {children}
     </AuthContext.Provider>
   )
