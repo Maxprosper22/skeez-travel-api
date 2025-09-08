@@ -13,7 +13,7 @@ from asyncio.subprocess import PIPE
 import httpx, aiohttp
 
 from src.utils.db import db_conn, db_pool
-from src.utils.templating import setupTemplating
+# from src.utils.templating import setupTemplating
 
 from src.services import register_services
 from src.blueprints import register_apps
@@ -229,7 +229,7 @@ def create_app() -> Sanic:
         # httpxClient
         app.ctx.httpxClient = httpx.AsyncClient()
         # Set up templating
-        app.ctx.template_env = await setupTemplating(app)
+        # app.ctx.template_env = await setupTemplating(app)
 
         # Setup ECDSA keys
         await register_services(app)

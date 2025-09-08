@@ -7,7 +7,6 @@ async def setupTemplating(app: Sanic) -> None:
     loaders = {
         'main': PackageLoader("src", "templates"),
         'admin': PackageLoader("src.blueprints.admin", "templates"),
-        'trip': PackageLoader("src.blueprints.trip", "templates")
     }
 
     env = Environment(
