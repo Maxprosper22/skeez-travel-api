@@ -1,4 +1,4 @@
-localhost:8000 {
+skeez.com.ng {
 	reverse_proxy localhost:8080
 }
 admin.localhost:8000 {

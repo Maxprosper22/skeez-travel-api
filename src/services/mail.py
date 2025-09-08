@@ -39,7 +39,7 @@ async def load_mail_config(config):
             # Load database config and add the password from environment
             _config = config.get("prod", {})['mail']
             _config["PROD_SMTP_PASSWORD"] = os.getenv("PROD_SMTP_PASSWORD")  # Get password from env
-            if not db_config["PROD_SMTP_PASSWORD"]:
+            if not _config["PROD_SMTP_PASSWORD"]:
                 raise ValueError("PROD_SMTP_PASSWORD environment variable is not set")
 
             mailconfig = MailConfig(
