@@ -36,12 +36,12 @@ function RouteComponent() {
   const { tripid } = Route.useParams()
 
   // const data = Route.useLoaderData()
-  let data = tripCtx.trips.get(tripid) 
-  data!.date = new Date(data!.date)
+  let data = tripCtx.trips?.get(tripid) 
+  data.date = new Date(data!.date)
 
-  useEffect(()=>{
-    data = tripCtx.trips.get(tripid)
-  }, [data])
+  // useEffect(()=>{
+  //   data = tripCtx.trips.get(tripid)
+  // }, [data])
   
   return (
     <div className="grid grid-rows-12 grid-cols-5 justify-start items-center w-full h-dvh divide-y divide-slate-800 relative">
