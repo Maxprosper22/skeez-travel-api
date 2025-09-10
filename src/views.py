@@ -11,14 +11,8 @@ from src.models.sse import BaseField, Event, Data, ID, Retry, Heartbeat, message
 async def index(request: Request, path: str):
     app = request.app
     pool = app.ctx.pool
-    templateEnv = app.ctx.template_env
 
     user = request.ctx.user
-    #
-    # template = templateEnv.get_template('main/index.html').render(user=user)
-    #
-    # return sanhtml(template)
-
     return sanhtml(app.config.DIST_DIR / "index.html")
  
 async def view_destinations(request: Request):
@@ -45,9 +39,6 @@ async def view_trips(request: Request):
 
     app = request.app
     pool = app.ctx.pool
-
-    templateEnv = app.ctx.template_env
-    template = templateEnv.get_template('main/trips.html')
 
     user = request.ctx.user
 
@@ -103,9 +94,6 @@ async def view_trip(request: Request, tripid: str):
     pool = app.ctx.pool
 
     user = request.ctx.user
-
-    templateEnv = app.ctx.template_env
-    template = templateEnv.get_template('main/trip.html')
 
     tripCtx = app.ctx.tripCtx
     tripService = tripCtx['TripService']
