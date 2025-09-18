@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouter, useCanGoBack } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 
 import { useTripCtx } from '@/trips'
@@ -31,6 +31,9 @@ function RouteComponent() {
   const auth = useAuth()
   const tripCtx = useTripCtx()
 
+  const router = useRouter()
+  const canGoBack = useCanGoBack()
+
   const [slotState, setSlotState] = useState<Array<SlotType> | []>([])
 
   const { tripid } = Route.useParams()
@@ -46,10 +49,10 @@ function RouteComponent() {
   return (
     <div className="grid grid-rows-12 grid-cols-5 justify-start items-center w-full h-dvh divide-y divide-slate-800 relative">
       <div className="row-span-1 col-span-5 flex justify-between items-center w-full h-full border">
-        <div className="flex justify-start items-center h-full p-2 gap-2">
+        {canGoBack ? <div onClick={()=> router.history.back()} className="flex justify-start items-center h-full p-2 gap-2">
           <IoChevronBack size={24} />
           <span className="flex justify-center items-center h-full text-sm font-bold">Back</span>
-        </div>
+        </div> : null}
       </div>
       <div className="row-span-10 col-span-5 flex flex-col justify-start items-center w-full h-full p-4 gap-8">
         <div className="flex justify-start items-center w-full">

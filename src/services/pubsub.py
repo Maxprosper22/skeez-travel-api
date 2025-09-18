@@ -47,7 +47,7 @@ class Subscriber[Message](Protocol):
 
 class SSESubscriber:
     def __init__(self, stream: response.HTTPResponse, accountid: UUID=None):
-        self.account_id: UUID = accountid
+        self.account_id: Optional[UUID] = accountid
         self.stream = stream
 
     async def __call__(self, message: str):

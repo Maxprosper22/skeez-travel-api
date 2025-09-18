@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import { Link, redirect, useNavigate } from '@tanstack/react-router'
 
 import type { TripType } from '@/trips'
 
@@ -8,6 +9,7 @@ export interface AuthContext {
   isAuthenticated: boolean;
   token: string | null;
   login: (email: string, password: string) => void;
+  signup: (email)
   logout: () => void;
   showSignInForm: boolean;
   showSignUpForm: boolean;
@@ -26,7 +28,15 @@ export interface AccountType {
   admin: object | null;
   trips: Array<TripType> | null;
 }
-
+export interface SignupProps {
+  email: string;
+  password: string;
+  password2: string;
+  firstname: string;
+  lastname: string;
+  othername: string | null;
+  phone: number;
+}
 export type SlotType = Omit<AccountType, 'admin' | 'trips'>
 
 const AuthContext = createContext<AuthContext | undefined>(undefined)
@@ -83,16 +93,25 @@ export const AuthProvider = ({children}: {children: ReactNode}) => {
     if (isAuthenticated) {
       return
     } else {
-      if (formType=='signin') {
+      if (formType==='signin') {
         setShowSigninForm(!showSignInForm)
-      } else {
+        if (showSignUpForm) {
+          setShowSignupForm(!showSignUpForm)
+        }
+      } else if (formType==='signup') {
         setShowSignupForm(!showSignUpForm)
+        if (showSignInForm) {
+          setShowSigninForm(!showSignInForm)
+        }
       }
     }
   }
   const login = useCallback(async (email:string, password:string) => {
     const req = await fetch('http://127.0.0.1:8080/account/signin', {
       method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+      },
       body: JSON.stringify({'email': email, 'password': password})
     })
 
@@ -105,6 +124,31 @@ export const AuthProvider = ({children}: {children: ReactNode}) => {
       setAuthToken(resp.token)
       // alert(resp.info)
       // userData = await fetch('http://127.0.0.1:8080/account/signin', {method: "POST"})
+      throw redirect({
+        to: '/'
+      })
+    }
+  }, [])
+
+  const signup = useCallback(async (userDetails: SignupProps)=>{
+    console.log(userDetails)
+    const req = await fetch('http://127.0.0.1:8080/account/signup/', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(userDetails)
+    })
+    if (req.status==201) {
+      const resp = await req.json()
+      setStoredUser(resp.data)
+      setUser(resp.data)
+
+      setStoredAuthToken(resp.token)
+      setAuthToken(resp.token)
+      throw redirect({
+        to: '/'
+      })
     }
   }, [])
 
@@ -112,7 +156,7 @@ export const AuthProvider = ({children}: {children: ReactNode}) => {
     const req = await fetch('http://127.0.0.1:8080/account/signout', {
       method: 'GET',
       headers: {
-        'Authorisation': `Bearer: ${authToken}`
+        'Authorization': `Bearer: ${authToken}`
       }
     })
     const resp = await req.json()
@@ -132,7 +176,7 @@ export const AuthProvider = ({children}: {children: ReactNode}) => {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated,  token:authToken, login, logout, showSignInForm, showSignUpForm, toggleAuthForm }}>
+    <AuthContext.Provider value={{ user, isAuthenticated,  token:authToken, login, signup, logout, showSignInForm, showSignUpForm, toggleAuthForm }}>
       {children}
     </AuthContext.Provider>
   )

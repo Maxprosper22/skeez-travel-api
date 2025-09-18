@@ -193,6 +193,8 @@ def create_app() -> Sanic:
     # CORS(app)
 
     # pprint.pp(app.config.__dir__())
+    # app.config.CORS_ORIGINS = ["http://127.0.0.1:8080", "http://localhost:3000", "http://127.0.0.1:3000"]
+    app.config.CORS_ORIGINS = '*'
     app.config.CORS_ORIGINS = ["http://127.0.0.1:8080", "http://localhost:3000", "http://127.0.0.1:3000"]
     app.config.CORS_SUPPORTS_CREDENTIALS = True
     app.config.CORS_AUTOMATIC_OPTIONS = True

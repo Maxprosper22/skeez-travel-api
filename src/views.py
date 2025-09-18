@@ -202,6 +202,9 @@ async def book(request: Request, tripid: str):
         Method: Post
     """
     try:
+        if not request.token:
+            return sanjson(status=401, body={'info': 'Unauthorized'})
+
         app = request.app
         pool = app.ctx.pool
 
@@ -218,6 +221,11 @@ async def book(request: Request, tripid: str):
         tripService = tripCtx['TripService']
 
         booking_info = request.json
+
+        if 'tripid' not in booking_info:
+            return sanjson(status=400, body={'info': 'Bad request'})
+        if 'accountid' not in booking_info:
+            return sanjson(status=400, body={'info': 'Bad request'})
 
         trip_data = await tripService.fetch_trip(pool=pool, tripid=tripid)
         if not trip_data:
@@ -241,15 +249,17 @@ async def book(request: Request, tripid: str):
         # }
         # payload = {'email': user['email'], 'amount': trip.destination.price}
         # async with aiohttpClient as session:
-        #     session.post('api.paystack.co/transaction/initialize', json=payload, headers=headers) as resp:
+        #     async with session.post('https://api.paystack.co/transaction/initialize', json=payload, headers=headers) as resp:
         #         pprint.pp(resp)
-        #         response = resp.json()
+        #         response = await resp.json()
+        #         pprint.pp(response)
+
 
         async with pool.acquire() as conn:
             ticket = await conn.fetchrow("SELECT * FROM tickets WHERE trip_id=$1 AND account_id=$2", booking_info["tripid"], booking_info["accountid"])
 
         if ticket:
-            return sanjson(400, body={'info': 'You already have a reservation'})
+            return sanjson(status=400, body={'info': 'You already have a reservation'})
 
         await tripService.book(pool, UUID(booking_info['tripid']), UUID(booking_info['accountid']))
 

@@ -11,5 +11,7 @@ async def router(app: Sanic) -> None:
     app.add_route(view_trips, '/trips', methods=['GET'])
     app.add_route(trip_sse, '/trips/sse', methods=['GET'])
     app.add_route(view_trip, '/trip/<tripid>', methods=['GET'])
-    app.add_route(book, '/trip/<tripid>/book', methods=['GET', 'POST'])
+    app.add_route(book, '/trip/<tripid>/book/', methods=['POST'])
+    app.add_route(book, '/trip/<tripid>/book/complete', methods=['GET', 'POST'])
+    app.add_route(book, '/trip/<tripid>/book/cancel', methods=['GET', 'POST'])
     app.add_route(unbook, '/trip/<tripid>/unbook', methods=['POST'])

@@ -28,13 +28,14 @@ class TripEvent:
 
 class TripService:
 
-    def __init__(self, pool: Pool, publisher: Publisher):
+    def __init__(self, pool: Pool, publisher: Publisher, channel_name: str):
         self.trips: Dict[UUID, Trip] = {}
         self.queue = PriorityQueue()
         self.pool: Pool = pool
         self.reminder_offset = timedelta(days=1)
         # self.running: bool = False
-        self.publisher: Publisher = None
+        self.channel: Channel = Channel[channel_name]
+        self.publisher: Publisher = publisher
 
     async def create_table(self, pool: Pool) -> None:
         """ Create a table for storing trips in database """
@@ -92,14 +93,22 @@ class TripService:
             raise e
                  
     async def _add_trip_events(self, trip: Trip):
-        """ Add reminfer and trip start events to queue """
-        self.trips[trip.trip_id] = trip
-        # Add reminder event (1 day before)
-        reminder_time = trip.date - self.reminder_offset
-        if reminder_time > datetime.now():
-            await self.queue.put(TripEvent(reminder_time, EventType.REMINDER, trip))
-        # Add trip start event
-        await self.queue.put(TripEvent(trip.date, EventType.TRIP_START, trip))
+        """ Add reminder and trip start events to queue """
+        try:
+            self.trips[trip.trip_id] = trip
+            # Add reminder event (1 day before)
+            reminder_time = trip.date - self.reminder_offset
+            if reminder_time > datetime.now():
+                await self.queue.put(TripEvent(reminder_time, EventType.REMINDER, trip))
+            # Add trip start event
+            await self.queue.put(TripEvent(trip.date, EventType.TRIP_START, trip))
+
+        except Exception as e:
+            raise e
+
+
+    asyc def create_channel(self, trip: Trip) -> None:
+        """ Creates a channel for each trip """
 
     async def create_trip(self, pool: Pool, trip: Trip) -> Optional[dict]:
         """ Create a trip instance """
@@ -158,7 +167,7 @@ class TripService:
             async with pool.acquire() as conn:
                 modded_trip = await conn.execute("""
                     UPDATE trips SET status=$1 WHERE trip_id=$2
-                """, status.value, trip_id)
+                """, status.value, trip.trip_id)
 
             trip.status = status
 
@@ -204,25 +213,25 @@ class TripService:
     async def send_notification(self, trip: Trip, event_type: EventType):
         """ Send notifications based on trip events """
 
-        if event_type == EventType.Reminder:
-            print(f"Reminder: Trip {trip.tripid} starts in 1 day at {trip.start_date}")
+        if event_type == EventType.REMINDER:
+            print(f"Reminder: Trip {trip.trip_id} starts in 1 day at {trip.date}")
         elif event_type == EventType.TRIP_START:
-            print(f"Notification: Trip {trip.tripid} has started at {trip.start_date}")
+            print(f"Notification: Trip {trip.trip_id} has started at {trip.date}")
 
-    async def run_trips(self):
+    async def run_trips(self, app: Sanic):
         """
             Run all trips in with pending and active statuses in self.trips. Runs on server startup.
         """
         try:
             while True:
                 # Get next event
-                trip_event = self.queue.get()
+                trip_event = await self.queue.get()
                 current_time = datetime.now()
-                event_time = trip_event.event_time
+                event_time = trip_event.event_date
                 trip = trip_event.trip
 
                 # Sleep until time for event
-                delay = (event_type - current_time).total_seconds()
+                delay = (event_time - current_time).total_seconds()
                 if delay > 0:
                     asyncio.sleep(delay)
 
@@ -232,7 +241,7 @@ class TripService:
                 # Pick at the queue to for events with the same time
                 while not self.queue.empty():
                     next_event = await self.queue.get()
-                    if next_event.event_time <= event_time:
+                    if next_event.event_date <= event_time:
                         events_to_process.append(next_event)
                     else:
                         await self.queue.put(next_event)
@@ -246,12 +255,12 @@ class TripService:
                     if event.event_type == EventType.REMINDER:
                         await self.send_notification(trip, EventType.REMINDER)
                     elif event.event_type == EventType.TRIP_START and trip.status == TripStatus.PENDING:
-                        await self.update_trip_status(trip, TripStatus.ACTIVE)
+                        await self.update_trip_status(self.pool, trip, TripStatus.ACTIVE)
                     await self.send_notification(trip, EventType.TRIP_START)
 
                 # Mark all processed events as done
                 for _ in events_to_process:
-                    await self.queue.taskdone()
+                    self.queue.task_done()
 
         except Exception as e:
             raise e

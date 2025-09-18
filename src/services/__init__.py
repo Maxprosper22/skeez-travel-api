@@ -34,7 +34,7 @@ async def register_services(app: Sanic) -> None:
     app.ctx.tripSSEChannel = app.ctx.Publisher.channels['sse']
 
     app.ctx.tripCtx = {
-        'TripService': TripService(pool=app.ctx.pool, publisher=app.ctx.Publisher),
+        'TripService': TripService(pool=app.ctx.pool, publisher=app.ctx.Publisher, 'sse'),
         'TripStatus': TripStatus,
         'Trip': Trip,
         'Destination': Destination
@@ -43,6 +43,8 @@ async def register_services(app: Sanic) -> None:
     # Create trips table
     await app.ctx.tripCtx["TripService"].create_table(pool=app.ctx.pool)
     await app.ctx.tripCtx["TripService"].initialise()
+
+    app.add_task(app.ctx.tripCtx['TripService'].run_trips)
 
     # Admin context varuables
     app.ctx.adminCtx = {

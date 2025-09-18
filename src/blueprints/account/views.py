@@ -6,6 +6,8 @@ from sanic.views import HTTPMethodView
 from uuid import UUID
 import pprint, traceback
 
+from pydantic_extra_types.phone_numbers import PhoneNumber
+
 async def account_info(request: Request, account_id: str) -> sanjson:
     """ Retrieve account information """
     try:
@@ -191,81 +193,68 @@ async def signup(request: Request):
         form_data = request.json
         pprint.pp(form_data)
 
-        match form_data:
-            case None:
-                return sanjson(status=400, body={'info': 'Bad request'})
+        if not form_data:
+            return sanjson(status=400, body={'info': 'Bad request'})
 
-            case {'email': email, 'password': password, 'password2': password2, 'phone': phonenumber, 'firstname': firstname, 'lastname': lastname, 'othername': othername}:
-                if not email:
-                    return sanjson(status=400, body={'info': 'Misssing required field: email'})
+        if not form_data['email']:
+            return sanjson(status=400, body={'info': 'Misssing required field: email'})
 
-                if not password:
-                    return sanjson(status=400, body={'info': 'Misssing required field: password'})
+        if not form_data['password']:
+            return sanjson(status=400, body={'info': 'Misssing required field: password'})
 
-                if not password2:
-                    return sanjson(status=400, body={'info': 'Misssing required field: password2'})
+        if not form_data['password2']:
+            return sanjson(status=400, body={'info': 'Misssing required field: password2'})
 
-                if not phonenumber:
-                    return sanjson(status=400, body={'info': 'Misssing required field: phone'})
+        if not form_data['phone']:
+            return sanjson(status=400, body={'info': 'Misssing required field: phone'})
 
-                if not firstname:
-                    return sanjson(status=400, body={'info': 'Misssing required field: firstname'})
-                if not lastname:
-                    return sanjson(status=400, body={'info': 'Misssing required field: lastname'})
+        if not form_data['firstname']:
+            return sanjson(status=400, body={'info': 'Misssing required field: firstname'})
+        if not form_data['lastname']:
+            return sanjson(status=400, body={'info': 'Misssing required field: lastname'})
 
-                if password != password2:
-                    return sanjson(status=400, body={'info': 'Passwords do not match'})
+        if form_data['password'] != form_data['password2']:
+            return sanjson(status=400, body={'info': 'Passwords do not match'})
 
-                match accountService.accounts:
-                    case [Account(email=email) as acct]:
-                        return sanjson(status=409, body={'info': 'This email is already registered'})
-                    case _:
-                        new_account = Account(
-                            email=email, 
-                            phone_number=phonenumber,
-                            password=passwordService.pwd_context.hash(password),
-                            firstname=firstname,
-                            lastname=lastname,
-                            othername=othername,
-                            is_admin=False
-                        )
-                        account_created = await accountService.create_account(pool, new_account)
+        user = await accountService.fetch_user(pool=pool, email=form_data['email'])
+        if user:
+            return sanjson(status=409, body={'info': 'This email is already registered'})
+        
+        new_account = Account(
+            email=form_data['email'], 
+            phone_number=PhoneNumber(form_data['phone']),
+            password=passwordService.pwd_context.hash(form_data['password']),
+            firstname=form_data['firstname'],
+            lastname=form_data['lastname'],
+            othername=form_data['othername'],
+            is_admin=False
+        )
+        account_created = await accountService.create_account(pool, new_account)
                         
-                        if not account_created:
-                            return sanjson(status=500, body={'info': 'An error occurred during account creation.'})
+        if not account_created:
+            return sanjson(status=500, body={'info': 'An error occurred during account creation.'})
+        account = await accountService.fetch_user(pool=pool, email=new_account.email)              
+        newToken = Token(
+            account_id = account.account_id,
+            valid = True,
+            token_type = tokenType.AUTH
+        )
+        gen_token = await tokenService.generate_token(pool, newToken, pvkey)
+        newToken.signature = gen_token.split('.')[-1]
                         
-                        # get_admin = await adminService.fetch(pool, new_account.account_created)
-                        # admin = Admin(
-                        #     admin_id = new_account_dict["admin_id"],
-                        #     account_id = new_account_dict["account_id"],
-                        #     roles = new_account_dict["roles"],
-                        #     date = new_account_dict["date"]
-                        # )
-                        # pprint.pp(account_dict)
+        account_dict = dict(new_account)
+        account_dict.pop('password')
+        await tokenService.store_token(pool, newToken)
 
-                        newToken = Token(
-                            account_id = account_id["account_id"],
-                            valid = True,
-                            token_type = tokenType.AUTH
-                        )
-                        gen_token = await tokenService.generate_token(pool, newToken, pvkey)
-                        newToken.signature = gen_token.split('.')[-1]
-                        
-                        account_dict = dict(new_account)
-                        account_dict.pop('password')
-                        await tokenService.store_token(pool, newToken)
+        account_dict["account_id"] = account_dict["account_id"].hex
+        account_dict['join_date'] = account_dict['join_date'].isoformat()
 
-                        account_dict["account_id"] = account_dict["account_id"].hex
-
-                        return sanjson(status=201, body={
-                            'info': 'Account created',
-                            'data': account_dict,
-                            'token': gen_token
-                        })
-
-                    # case _:
-                    #     return sanjson(status=500, body={'info': 'An unexpected error occurred wgen processing your request'})
-
+        return sanjson(status=201, body={
+            'info': 'Account created',
+            'data': account_dict,
+            'token': gen_token
+        })
+    
     except Exception as e:
         raise e
 

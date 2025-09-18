@@ -1,3 +1,4 @@
+import { createFileRoute } from '@tanstack/react-router'
 import { useRef, useState, useEffect } from 'react';
 import type { ChangeEvent, MouseEvent } from 'react'
 
@@ -87,14 +88,15 @@ const DestinationForm = ({ showDestinationForm, toggleDestinationForm }: Destina
 const DestinationItem = ({destination}: {destination: DestinationType}) => {
   console.log(destination.destination_id)
   return (
-    <div className="flex justify-center items-center w-full h-20">{destination.name}</div>
+    <div className="flex justify-center items-center w-full h-20 bg-slate-800">{destination.name}</div>
   )
 }
 
-export const Destinations = ({showDestinationModal, toggleDestinationModal}: DestinationsProps) => {
-  if (!showDestinationModal) {
-    return null
-  }
+export const Route = createFileRoute('/_app/destinations') ({
+  component: Destinations
+})
+
+function Destinations() {
   
   const auth = useAuth()
   const tripCtx = useTripCtx()
@@ -104,29 +106,24 @@ export const Destinations = ({showDestinationModal, toggleDestinationModal}: Des
   const destinationsBackdrop = useRef<HTMLDivElement>(null)
   const historyList = useRef<HTMLDivElement>(null)
 
-  const handleModal = (e: MouseEvent<HTMLDivElement>) => {
-    if (e.target == destinationsBackdrop.current) {
-      toggleDestinationModal(e)
-    }
-  }
 
   const toggleDestinationForm = () => {
     setDestinationForm(!showDestinationForm)
   }
 
   return (
-    <div ref={destinationsBackdrop} className="flex flex-col justify-end items-center w-screen h-dvh absolute z-10 bg-slate-900/80" onClick={(e)=> handleModal(e)}>
-      <div className="flex flex-col justify-center items-center w-full max-h-[70%] bg-slate-800 py-8 px-4 gap-6 rounded-t-4xl relative">
-        <div className="flex justify-between items-center w-full">
-          <span className="flex justify-start items-center font-bold text-lg">Destinations</span>
-          <div onClick={(e)=> toggleDestinationForm()} className="flex justify-center items-center w-32 h-10 gap-x-1 bg-blue-500 rounded-lg">
-            <MdOutlineAddLocationAlt size={24} />
-            <span className="font-bold text-sm">Add</span>
-          </div>
+    <div ref={destinationsBackdrop} className="flex flex-col justify-start items-center w-full h-fullbg-slate-900/80">
+      <div className="flex justify-between items-center w-full h-28">
+        <span className="flex justify-start items-center font-bold text-lg">Destinations</span>
+        <div onClick={(e)=> toggleDestinationForm()} className="flex justify-center items-center w-32 h-10 gap-x-1 bg-blue-500 rounded-lg">
+          <MdOutlineAddLocationAlt size={24} />
+          <span className="font-bold text-sm">Add</span>
         </div>
+      </div>
+      <div className="flex flex-col justify-center items-center w-full py-8 px-4 gap-6 relative">
 
         <div ref={historyList} className="flex flex-col justify-center items-center w-full max-h-140 min-h-36 bg-slate-900 rounded-lg overflow-hidden">
-          {tripCtx.destinations ? <div className="flex flex-col justify-start items-center w-full h-full divide-y divide-slate-800 overflow-y-auto">
+          {tripCtx.destinations ? <div className="flex flex-col justify-start items-center w-full h-full divide-y divide-slate-900 overflow-y-auto">
             {Array.from(tripCtx.destinations, ([key, value])=><DestinationItem key={key} destination={value} />)}
           </div> : <div className="flex justify-center items-center w-full h-full font-bold italic">No destination data</div>}
         </div>

@@ -9,8 +9,8 @@ import type { TripContext } from '@/trips'
 import { useAuth } from '@/auth'
 import { useTripCtx } from '@/trips'
 
-import { SignInForm } from '@/components/SignInForm'
-// import { Signup } from '@/components/Signup'
+// import { SignInForm } from '@/components/SignInForm'
+// import { SignUpForm } from '@/components/SignUpForm'
 
 interface RouterContext {
   auth: AuthContext;
@@ -31,10 +31,7 @@ function Root() {
   }, [])
   return (
     <div className="flex flex-col justify-center items-center w-screen h-dvh relative text-white bg-slate-900">
-      {!auth.isAuthenticated && auth.showSignInForm ? <SignInForm /> : ""}
-      {/*context.auth.showSignUpForm ? <Signup /> : ""*/}
       <Outlet />
-      <TanStackRouterDevtools />
     </div>
   )
 }

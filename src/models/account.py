@@ -20,5 +20,3 @@ class Account(BaseModel):
     is_admin: bool = False
     admin: Optional[Admin] = None
     trips: Optional[Trip] = None
-
-
