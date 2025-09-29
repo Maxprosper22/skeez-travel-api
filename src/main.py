@@ -114,43 +114,6 @@ def create_app() -> Sanic:
     async def hello_world(request):
         return sanjson({"message": "Hello from Sanic!"})
 
-    # File reload signal handler
-    @app.signal("watchdog.file.reload")
-    async def file_reloaded():
-        logger.info("Detected file changes, checking for rebuild...")
-        do_rebuild = False
-        reloaded_files = app.config.get("RELOADED_FILES", "").split(",")
-
-        # Check if any changed files are JS/TS/TSX
-        for filename in reloaded_files:
-            if filename and filename.rsplit(".", 1)[-1] in ("js", "ts", "tsx"):
-                do_rebuild = True
-                break
-
-        if do_rebuild:
-            logger.info("Rebuilding frontend due to JS/TS/TSX changes...")
-            try:
-                rebuild = await create_subprocess_shell(
-                    "npm run build",
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    cwd=app.config.FRONTEND_DIR,
-                )
-                stdout, stderr = await rebuild.communicate()
-
-                if rebuild.returncode == 0:
-                    logger.info("Frontend rebuild successful.")
-                    for line in stdout.decode("ascii").splitlines():
-                        logger.info(f"[rebuild] {line}")
-                else:
-                    logger.error("Frontend rebuild failed.")
-                    for line in stderr.decode("ascii").splitlines():
-                        logger.error(f"[rebuild error] {line}")
-            except Exception as e:
-                logger.error(f"Error during rebuild: {e}")
-        else:
-            logger.info("No rebuild needed (no JS/TS/TSX changes).")
-
     # Listener to initialize file watching (development only)
     @app.listener("before_server_start")
     async def setup_file_watcher(app, loop):
@@ -218,7 +181,6 @@ def create_app() -> Sanic:
         # Setup database connection
         dsn = await db_conn(config=db_config)
         app.ctx.pool = await db_pool(dsn, loop)
-
 
         # Load email config
         # app.ctx.mailConfig = await load_mail_config(config)

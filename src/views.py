@@ -8,6 +8,7 @@ from uuid import UUID
 
 from src.models.sse import BaseField, Event, Data, ID, Retry, Heartbeat, message
 
+
 async def index(request: Request, path: str):
     app = request.app
     pool = app.ctx.pool
@@ -15,6 +16,7 @@ async def index(request: Request, path: str):
     user = request.ctx.user
     return sanhtml(app.config.DIST_DIR / "index.html")
  
+
 async def view_destinations(request: Request):
     try:
         app = request.app
@@ -31,6 +33,7 @@ async def view_destinations(request: Request):
     except Exception as e:
         raise e
     
+
 async def view_trips(request: Request):
     """ 
         View available trips
@@ -44,6 +47,7 @@ async def view_trips(request: Request):
 
     rendered_template = template.render(user=user)
     return sanhtml(rendered_template)
+
 
 async def fetch_trips(request: Request):
     """ Api endpoint for retrieving trips """
@@ -84,6 +88,7 @@ async def fetch_trips(request: Request):
 
     return sanjson(body={'data': all_trips})
 
+
 async def view_trip(request: Request, tripid: str):
     """ 
         Retrieve data for a specific trip
@@ -123,6 +128,7 @@ async def view_trip(request: Request, tripid: str):
     # passengers = 
     
     return sanjson(body={'data': tripData})
+
 
 async def trip_sse(request: Request):
     """Pushes updates to clients via SSE."""
@@ -196,6 +202,7 @@ async def trip_sse(request: Request):
         logger.error(f"Error in trip_sse: {e}")
         raise e
 
+
 async def book(request: Request, tripid: str):
     """ 
         Register a passenger for a trip
@@ -267,6 +274,7 @@ async def book(request: Request, tripid: str):
 
     except Exception as e:
         raise e
+
 
 async def unbook(request: Request, tripid: str):
     """

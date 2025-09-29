@@ -1,4 +1,4 @@
-src/services/certificates/
+*/src/certificates/
 
 # Configuration
 **/config.toml
