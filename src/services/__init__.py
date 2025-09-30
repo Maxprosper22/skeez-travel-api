@@ -34,7 +34,7 @@ async def register_services(app: Sanic) -> None:
     app.ctx.tripSSEChannel = app.ctx.Publisher.channels['sse']
 
     app.ctx.tripCtx = {
-        'TripService': TripService(pool=app.ctx.pool, publisher=app.ctx.Publisher, 'sse'),
+        'TripService': TripService(pool=app.ctx.pool, publisher=app.ctx.Publisher, channel_name='sse'),
         'TripStatus': TripStatus,
         'Trip': Trip,
         'Destination': Destination

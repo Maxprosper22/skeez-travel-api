@@ -98,6 +98,13 @@ def create_app() -> Sanic:
     # Serve static assets (JS, CSS, etc.) from dist/assets
     app.static("/assets", app.config.DIST_DIR / "assets", name="assets")
 
+    app.config.CORS_ORIGINS = ["http://127.0.0.1:8080", "http://localhost:3000", "http://127.0.0.1:3000"]
+    app.config.CORS_SUPPORTS_CREDENTIALS = True
+    app.config.CORS_AUTOMATIC_OPTIONS = True
+    app.config.CORS_ALLOW_HEADERS = ['Origin', 'Accept', 'Content-Type', 'Access-Control-Allow-Origin', 'Authorization']
+    Extend(app)
+
+
     # Serve index.html for all non-static routes to support TanStack Router
     @app.get("/<path:path>")
     async def serve_index(request, path: str):
@@ -109,60 +116,8 @@ def create_app() -> Sanic:
             return sanhtml("Frontend not built. Run `npm run build` in skrid-web.", status=500)
         return await sanfile(index_path)
 
-    # Optional API route for testing
-    @app.get("/api/hello")
-    async def hello_world(request):
-        return sanjson({"message": "Hello from Sanic!"})
-
-    # Listener to initialize file watching (development only)
-    @app.listener("before_server_start")
-    async def setup_file_watcher(app, loop):
-        if app.config.get("SANIC_ENV", "production") == "development":
-            logger.info("Starting in development mode, setting up file watcher...")
-            # Simulate file changes or integrate with watchdog (example below)
-            # For watchdog integration, ensure `watchdog` is installed: `pip install watchdog`
-            try:
-                from watchdog.observers import Observer
-                from watchdog.events import FileSystemEventHandler
-
-                class FileChangeHandler(FileSystemEventHandler):
-                    def on_any_event(self, event):
-                        if event.is_directory:
-                            return
-                        if event.src_path.endswith((".js", ".ts", ".tsx")):
-                            app.config["RELOADED_FILES"] = event.src_path
-                            app.dispatch("watchdog.file.reload")
-
-                observer = Observer()
-                observer.schedule(FileChangeHandler(), app.config.FRONTEND_DIR, recursive=True)
-                observer.start()
-                logger.info("File watcher started for skrid-web directory.")
-                app.ctx.observer = observer  # Store observer to stop it later
-            except ImportError:
-                logger.warning("Watchdog not installed. File watching disabled.")
-        else:
-            logger.info("Starting in production mode, no file watcher needed.")
-
-    # Stop file watcher on server shutdown (development only)
-    @app.listener("after_server_stop")
-    async def stop_file_watcher(app, loop):
-        if hasattr(app.ctx, "observer"):
-            app.ctx.observer.stop()
-            app.ctx.observer.join()
-            logger.info("File watcher stopped.")
 
     app.static("/static", "./src/assets")
-
-    # CORS(app)
-
-    # pprint.pp(app.config.__dir__())
-    # app.config.CORS_ORIGINS = ["http://127.0.0.1:8080", "http://localhost:3000", "http://127.0.0.1:3000"]
-    app.config.CORS_ORIGINS = '*'
-    app.config.CORS_ORIGINS = ["http://127.0.0.1:8080", "http://localhost:3000", "http://127.0.0.1:3000"]
-    app.config.CORS_SUPPORTS_CREDENTIALS = True
-    app.config.CORS_AUTOMATIC_OPTIONS = True
-    app.config.CORS_ALLOW_HEADERS = ['Origin', 'Accept', 'Content-Type', 'Access-Control-Allow-Origin', 'Authorization']
-    Extend(app)
 
     @app.listener("before_server_start")
     async def application_setup(app, loop):

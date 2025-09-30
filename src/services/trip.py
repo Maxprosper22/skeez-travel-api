@@ -107,7 +107,7 @@ class TripService:
             raise e
 
 
-    asyc def create_channel(self, trip: Trip) -> None:
+    async def create_channel(self, trip: Trip) -> None:
         """ Creates a channel for each trip """
 
     async def create_trip(self, pool: Pool, trip: Trip) -> Optional[dict]:
