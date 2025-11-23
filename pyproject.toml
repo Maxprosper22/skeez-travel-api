@@ -27,11 +27,17 @@ dependencies = [
     "passlib>=1.7.4",
     "sanic-cors>=2.2.0",
     "apscheduler>=3.11.0",
-    "paystack-sdk>=1.0.1",
     "httpx>=0.28.1",
     "aiohttp[speedups]>=3.12.15",
+    "itsdangerous",
+    "pyotp",
+    "mailbridge>=2.0.0",
+    "celery>=5.5.3",
 ]
 
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+# [build-system]
+# requires = ["setuptools", "wheel"]
+# build-backend = "setuptools.build_meta"
+
+[tool.uv]
+package=false

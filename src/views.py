@@ -215,7 +215,7 @@ async def book(request: Request, tripid: str):
         app = request.app
         pool = app.ctx.pool
 
-        paystackConfig = app.ctx.PaystackConfig
+        paystackConfig = app.config['paystack']
 
         aiohttpClient = app.ctx.aiohttpClient
 
@@ -231,6 +231,7 @@ async def book(request: Request, tripid: str):
 
         if 'tripid' not in booking_info:
             return sanjson(status=400, body={'info': 'Bad request'})
+
         if 'accountid' not in booking_info:
             return sanjson(status=400, body={'info': 'Bad request'})
 

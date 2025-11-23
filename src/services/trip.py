@@ -37,6 +37,7 @@ class TripService:
         self.channel: Channel = Channel[channel_name]
         self.publisher: Publisher = publisher
 
+
     async def create_table(self, pool: Pool) -> None:
         """ Create a table for storing trips in database """
 
@@ -61,6 +62,7 @@ class TripService:
                 """)
         except Exception as e:
             raise e
+
 
     async def initialise(self) -> None:
         """
@@ -91,7 +93,8 @@ class TripService:
                 await self._add_trip_events(trip)
         except Exception as e:
             raise e
-                 
+
+
     async def _add_trip_events(self, trip: Trip):
         """ Add reminder and trip start events to queue """
         try:
@@ -109,6 +112,7 @@ class TripService:
 
     async def create_channel(self, trip: Trip) -> None:
         """ Creates a channel for each trip """
+
 
     async def create_trip(self, pool: Pool, trip: Trip) -> Optional[dict]:
         """ Create a trip instance """
@@ -139,6 +143,7 @@ class TripService:
             # Re-add events to queue
             await self._add_trip_events(trip)
 
+
     async def cancel_trip(self, pool: Pool, tripid: UUID) -> Optional[Trip]:
         """ Cancels trip """
         if tripid in self.trips:
@@ -159,6 +164,7 @@ class TripService:
         else:
             raise ValueError("Trip {tripid} is not active or or does not exist")
 
+
     async def update_trip_status(self, pool: Pool, trip: Trip, status: TripStatus):
         """
             Update trip (trip_id) status to (status). Status may be one of the following ['pending', 'active', 'cancelled', 'complete']
@@ -173,6 +179,7 @@ class TripService:
 
         except Exception as e:
             raise e        
+
 
     async def book(self, pool: Pool, tripid: UUID, accountid: UUID):
         """ Adds a user to a trip's list """
@@ -197,6 +204,7 @@ class TripService:
         except Exception as e:
             raise e
 
+
     async def unbook(self, pool: Pool, tripid: UUID, accountid: UUID):
         """ Removes a user from a trip's list """
         try:
@@ -210,6 +218,7 @@ class TripService:
         except Exception as e:
             raise e
 
+
     async def send_notification(self, trip: Trip, event_type: EventType):
         """ Send notifications based on trip events """
 
@@ -217,6 +226,7 @@ class TripService:
             print(f"Reminder: Trip {trip.trip_id} starts in 1 day at {trip.date}")
         elif event_type == EventType.TRIP_START:
             print(f"Notification: Trip {trip.trip_id} has started at {trip.date}")
+
 
     async def run_trips(self, app: Sanic):
         """
@@ -265,6 +275,7 @@ class TripService:
         except Exception as e:
             raise e
 
+
     async def fetch(self, pool: Pool) -> Optional[list[Trip]]:
         """ Retrieve all trips """
 
@@ -305,6 +316,7 @@ class TripService:
 
         except Exception as e:
             raise e
+
 
     async def fetch_trip(cls, pool: Pool, tripid: UUID) -> Optional[Trip]:
         """ Retrieve trip with matching id """
@@ -369,6 +381,7 @@ class TripService:
 
         return trip
 
+
     async def create_destination(self, pool: Pool, destination: Destination):
         try:
             if not destination:
@@ -385,6 +398,7 @@ class TripService:
         except Exception as e:
             raise e
 
+
     async def fetch_destination(self, pool: Pool, title: str):
         try:
             async with pool.acquire() as conn:
@@ -395,6 +409,7 @@ class TripService:
             return dict(record)
         except Exception as e:
             raise e
+
 
     async def fetch_destinations(self, pool: Pool):
         """ Fetch registered destinations """

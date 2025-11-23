@@ -13,9 +13,13 @@ from asyncio.subprocess import PIPE
 import httpx, aiohttp
 
 from src.utils.db import db_conn, db_pool
-# from src.utils.templating import setupTemplating
 
 from src.services import register_services
+from src.services.celery_app import app as celeryapp, email_verification, email_reset_link
+
+from src.services.magiclink import SecureMagicLink
+
+
 from src.blueprints import register_apps
 
 # from src.services.mail import load_mail_config
@@ -24,7 +28,6 @@ from src.middlewares import setup_middleware
 from src.urls import router
 
 import pprint
-# pprint.pp(os.__dir__())
 
 load_dotenv()
 
@@ -38,52 +41,34 @@ def load_config(file_path):
         raise Exception(f"Invalid TOML format in {file_path}")
 
 async def load_database_config(config):
-    """ Load database config. Dependent on tye environment """
-    env = config.get('app')["ENV"]
-    match env:
-        case "dev":
-            # Load database config and add the password from environment
-            db_config = config.get("dev", {})['database']
-            db_config["DB_PASSWORD"] = os.getenv("DEV_DB_PASSWORD")  # Get password from env
-            if not db_config["DB_PASSWORD"]:
-                raise ValueError("DB_PASSWORD environment variable is not set")
+    """ Load database config. Dependent on the environment """
+    try:
+        db_config = config.get("database", {})
+        db_config["DB_PASSWORD"] = os.getenv("DB_PASSWORD")  # Get password from env
+        if not db_config["DB_PASSWORD"]:
+            raise ValueError("DB_PASSWORD environment variable is not set")
 
-            return db_config
-        case "prod":
-            # Load database config and add the password from environment
-            db_config = config.get("prod", {})['database']
-            db_config["DB_PASSWORD"] = os.getenv("DB_PASSWORD")  # Get password from env
-            if not db_config["DB_PASSWORD"]:
-                raise ValueError("DB_PASSWORD environment variable is not set")
+        return db_config
+    except Exception as e:
+        raise e
 
-            return db_config
-        
+
 async def load_paystack_config(config):
     """ Load paystack configuration """
-    env = config.get('app')["ENV"]
-    match env:
-        case 'dev':
-            paystack_config = config.get('dev', {})['paystack']
-            paystack_config['SECRET_KEY'] = os.getenv("TEST_PAYSTACK_SECRET_KEY")
-            paystack_config['PUBLIC_KEY'] = os.getenv("TEST_PAYSTACK_PUBLIC_KEY")
+    try:
+        paystack_config = config.get('paystack', {})
+        paystack_config['SECRET_KEY'] = os.getenv("PAYSTACK_SECRET_KEY")
+        paystack_config['PUBLIC_KEY'] = os.getenv("PAYSTACK_PUBLIC_KEY")
 
-            if not paystack_config['SECRET_KEY']:
-                raise ValueError("Paystack Secret key missing")
-            elif not paystack_config['PUBLIC_KEY']:
-                raise ValueError('Paystack public key missing')
+        if not paystack_config['SECRET_KEY']:
+            raise ValueError("Paystack Secret key missing")
+        elif not paystack_config['PUBLIC_KEY']:
+            raise ValueError('Paystack public key missing')
 
-            return paystack_config
+        return paystack_config
 
-        case 'prod':
-            paystack_config = config.get('prod', {})['paystack']
-            paystack_config['SECRET_KEY'] = os.getenv("PAYSTACK_SECRET_KEY")
-            paystack_config['PUBLIC_KEY'] = os.getenv("PAYSTACK_PUBLIC_KEY")
-            if not paystack_config['SECRET_KEY']:
-                raise ValueError("Paystack Secret key missing")
-            elif not paystack_config['PUBLIC_KEY']:
-                raise ValueError('Paystack public key missing')
-
-            return paystack_config
+    except Exception as e:
+        raise e
 
 
 def create_app() -> Sanic:
@@ -123,6 +108,33 @@ def create_app() -> Sanic:
     async def application_setup(app, loop):
         """ Server setup """
         
+        # Load encryption key
+        app.ctx.ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY').encode()
+        
+        fernetkey = Fernet(app.ctx.ENCRYPTION_KEY) 
+        app.ctx.fernet = fernetkey
+
+        # Set up magic links
+        app.ctx.EmailVerificationLink = SecureMagicLink(
+            app=app,
+            secret_key=app.ctx.ENCRYPTION_KEY,
+            link_type="verify"
+        )
+        app.ctx.PasswordResetLink = SecureMagicLink(
+            app=app,
+            secret_key=app.ctx.ENCRYPTION_KEY,
+            link_type="reset"
+        )
+
+        # Create celery app ctx
+        app.ctx.CeleryApp = celeryapp
+        app.ctx.tasks ={
+            'email_verification': email_verification,
+            'email_reset_link': email_reset_link
+        }
+
+
+
         # Apply the configuration to the Sanic app
         config = load_config("config.toml")
         # pprint.pp(config)
@@ -141,7 +153,8 @@ def create_app() -> Sanic:
         # app.ctx.mailConfig = await load_mail_config(config)
 
         # Set up paystack configuration
-        app.ctx.PaystackConfig = await load_paystack_config(config)
+        paystackConfig = await load_paystack_config(config)
+        app.config.update(paystackConfig)
 
         # Set up aiohttp ClientSession
         app.ctx.aiohttpClient = aiohttp.ClientSession()
