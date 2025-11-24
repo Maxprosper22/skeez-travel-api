@@ -22,6 +22,8 @@ from src.services.magiclink import SecureMagicLink
 
 from src.blueprints import register_apps
 
+from cryptography.fernet import Fernet
+
 # from src.services.mail import load_mail_config
 
 from src.middlewares import setup_middleware
@@ -40,11 +42,13 @@ def load_config(file_path):
     except toml.TomlDecodeError:
         raise Exception(f"Invalid TOML format in {file_path}")
 
+
 async def load_database_config(config):
     """ Load database config. Dependent on the environment """
     try:
-        db_config = config.get("database", {})
+        db_config = config["database"]
         db_config["DB_PASSWORD"] = os.getenv("DB_PASSWORD")  # Get password from env
+        pprint.pp(db_config)
         if not db_config["DB_PASSWORD"]:
             raise ValueError("DB_PASSWORD environment variable is not set")
 
