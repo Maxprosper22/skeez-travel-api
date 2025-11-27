@@ -1,7 +1,8 @@
 from uuid import UUID, uuid4
 from typing import Optional
 from datetime import datetime, timedelta
-import jwt, pprint
+import jwt
+import pprint
 from asyncpg.pool import Pool
 
 from src.models.token import Token, TokenType

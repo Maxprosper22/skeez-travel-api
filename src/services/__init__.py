@@ -42,9 +42,6 @@ async def register_services(app: Sanic) -> None:
 
     # Create trips table
     await app.ctx.tripCtx["TripService"].create_table(pool=app.ctx.pool)
-    await app.ctx.tripCtx["TripService"].initialise()
-
-    app.add_task(app.ctx.tripCtx['TripService'].run_trips)
 
     # Admin context varuables
     app.ctx.adminCtx = {
@@ -52,8 +49,6 @@ async def register_services(app: Sanic) -> None:
         "AdminRole": AdminRole,
         "AdminService": AdminService
     }
-    # Create new table table if it doesn't exist
-    await app.ctx.adminCtx["AdminService"].create_table(pool=app.ctx.pool)
 
     # app.ctx.AccountModel = Account
     app.ctx.accountCtx = {
@@ -63,9 +58,9 @@ async def register_services(app: Sanic) -> None:
 
     # Create new accounts table if it doesn't exist
     await app.ctx.accountCtx["AccountService"].create_table(pool=app.ctx.pool)
-    
-    # Retrieve and populate Accounts array of the AccountController
-    await app.ctx.accountCtx["AccountService"].initialise(pool=app.ctx.pool)
+    # Create new table table if it doesn't exist
+    await app.ctx.adminCtx["AdminService"].create_table(pool=app.ctx.pool)
+
 
 
     await setupECDSAKeys(app)  # Set up encryption keys
@@ -88,3 +83,9 @@ async def register_services(app: Sanic) -> None:
     await app.ctx.ticketCtx["TicketService"].create_table(pool=app.ctx.pool)
 
 
+    await app.ctx.tripCtx["TripService"].initialise()
+
+    app.add_task(app.ctx.tripCtx['TripService'].run_trips)
+
+    # Retrieve and populate Accounts array of the AccountController
+    await app.ctx.accountCtx["AccountService"].initialise(pool=app.ctx.pool)

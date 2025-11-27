@@ -43,6 +43,7 @@ class TripService:
 
         try:
             async with pool.acquire() as conn:
+
                 await conn.execute("""
                     CREATE TABLE IF NOT EXISTS destinations (
                         destination_id UUID PRIMARY KEY,
@@ -60,6 +61,12 @@ class TripService:
                         date TIMESTAMP NOT NULL
                     )
                 """)
+
+                await conn.execute("""CREATE TABLE IF NOT EXISTS tickets (
+                    trip_id UUID REFERENCES trips,
+                    account_id UUID REFERENCES accounts,
+                    PRIMARY KEY(trip_id, account_id)
+                )""")
         except Exception as e:
             raise e
 

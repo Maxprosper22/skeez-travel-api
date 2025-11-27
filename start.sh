@@ -4,16 +4,17 @@
 set -e
 
 echo "Setting up virtual environment and installing dependencies..."
-uv sync --frozen --all-extras --no-install-project
+uv sync --all-extras --no-install-project
+source .venv/bin/activate
 
-echo "Loading .env secrets"
-if [ -f .env ]; then
-  set -a   # Automatically export all variables
-  source .env || true   # source the file
-  set +a     # turn it off again
-else 
-  echo ".env not found, continuing without secrets..."
-fi
+# echo "Loading .env secrets"
+# if [ -f .env ]; then
+  # set -a   # Automatically export all variables
+  # source .env || true   # source the file
+  # set +a     # turn it off again
+# else 
+  # echo ".env not found, continuing without secrets..."
+# fi
 
 echo "Reading configurations..."
 CONFIG_FILE="config.toml"

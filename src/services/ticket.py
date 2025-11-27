@@ -4,7 +4,7 @@ from uuid import UUID
 class TicketService:
 
     async def create_table(self, pool: Pool):
-        """ Creayes table if doesn't exists """
+        """ Creates table if doesn't exists """
 
         async with pool.acquire() as conn:
             await conn.execute("""CREATE TABLE IF NOT EXISTS tickets (

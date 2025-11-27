@@ -13,33 +13,33 @@ function RouteComponent() {
   const auth = useAuth()
   const tripCtx = useTripCtx()
   return (
-    <div className="grid grid-rows-12 grid-cols-6 items-center h-full w-full text-center relative divide-y divide-slate-800">
-      <div className="row-span-11 col-span-6 flex flex-col justify-start items-center w-full h-full">
+    <div className="grid grid-rows-12 grid-cols-6 h-full w-full relative divide-y divide-slate-800">
+
+      <div className="row-span-11 col-span-6 flex flex-col justify-center items-center w-full h-full">
         <Outlet />
       </div>
-      <div className="col-span-6 flex justify-evenly items-center h-full w-full">
+
+      <div className="row-span-1 col-span-6 flex justify-evenly items-center h-full w-full">
         <Link to="/home" className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
-            {({ isActive })=>{
-              return (
-                <div className={isActive ? "flex flex-col justify-evenly items-center w-full h-full text-blue-500": "flex flex-col justify-evenly items-center w-full h-full"}>
-                  <IoHome size={28} />
-                  <span className="flex justify-center items-center w-full font-bold text-sm">Home</span>
-                </div>
-              )
-            }}
+          {({ isActive })=>{
+            return (
+              <div className={isActive ? "flex flex-col justify-evenly items-center w-full h-full text-blue-500": "flex flex-col justify-evenly items-center w-full h-full"}>
+                <IoHome size={28} />
+                <span className="flex justify-center items-center w-full font-bold text-sm">Home</span>
+              </div>
+            )
+          }}
         </Link>
-        {auth.isAuthenticated && auth.user.is_admin ?
-          <Link to="/destinations" className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
-            {({ isActive })=>{
-              return (
-                <div className={isActive ? "flex flex-col justify-evenly items-center w-full h-full text-blue-500": "flex flex-col justify-evenly items-center w-full h-full"}>
-                  <MdLocationPin size={28} />
-                  <span className="flex justify-center items-center w-full font-bold text-sm">Destinations</span>
-                </div>
-              )
-            }}
-          </Link>
-        : null}
+        <Link to="/destinations" className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
+          {({ isActive })=>{
+            return (
+              <div className={isActive ? "flex flex-col justify-evenly items-center w-full h-full text-blue-500": "flex flex-col justify-evenly items-center w-full h-full"}>
+                <MdLocationPin size={28} />
+                <span className="flex justify-center items-center w-full font-bold text-sm">Destinations</span>
+              </div>
+            )
+          }}
+        </Link>
         {auth.isAuthenticated && auth.user?.is_admin ?
           <Link to="/admin" className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
             {({ isActive })=>{
@@ -52,6 +52,7 @@ function RouteComponent() {
             }}
           </Link>
           : null}
+
         {/*auth.isAuthenticated ?
           <div onClick={(e)=> toggleHistoryModal(e)} className="flex flex-col justify-center items-center w-20 h-20 py-2 gap-y-2">
             <MdOutlineHistory size={28} />
