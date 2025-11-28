@@ -45,7 +45,7 @@ def load_config(file_path):
         raise Exception(f"Invalid TOML format in {file_path}")
 
 
-async def load_database_config(config):
+def load_database_config(config):
     """ Load database config. Dependent on the environment """
     try:
         db_config = config["database"]
@@ -59,7 +59,7 @@ async def load_database_config(config):
         raise e
 
 
-async def load_paystack_config(config):
+def load_paystack_config(config):
     """ Load paystack configuration """
     try:
         paystack_config = config.get('paystack', {})
@@ -110,74 +110,83 @@ def create_app() -> Sanic:
 
     app.static("/static", "./src/assets")
 
-    @app.main_process_start
-    async def application_setup(app, loop):
-        """ Server setup """
+    # @app.main_process_start
+    # async def application_setup(app, loop):
+        # """ Server setup """
         
         # Load encryption key
-        app.ctx.ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY').encode()
+    app.ctx.ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY').encode()
         
-        fernetkey = Fernet(app.ctx.ENCRYPTION_KEY) 
-        app.ctx.fernet = fernetkey
+    fernetkey = Fernet(app.ctx.ENCRYPTION_KEY) 
+    app.ctx.fernet = fernetkey
 
-        # Set up magic links
-        app.ctx.EmailVerificationLink = SecureMagicLink(
-            app=app,
-            secret_key=app.ctx.ENCRYPTION_KEY,
-            link_type="verify"
-        )
-        app.ctx.PasswordResetLink = SecureMagicLink(
-            app=app,
-            secret_key=app.ctx.ENCRYPTION_KEY,
-            link_type="reset"
-        )
+    # Set up magic links
+    app.ctx.EmailVerificationLink = SecureMagicLink(
+        app=app,
+        secret_key=app.ctx.ENCRYPTION_KEY,
+        link_type="verify"
+    )
+    app.ctx.PasswordResetLink = SecureMagicLink(
+        app=app,
+        secret_key=app.ctx.ENCRYPTION_KEY,
+        link_type="reset"
+    )
 
-        # Create celery app ctx
-        app.ctx.CeleryApp = celeryapp
-        app.ctx.tasks ={
-            'email_verification': email_verification,
-            'email_reset_link': email_reset_link
-        }
+    # Create celery app ctx
+    app.ctx.CeleryApp = celeryapp
+    app.ctx.tasks ={
+        'email_verification': email_verification,
+        'email_reset_link': email_reset_link
+    }
 
 
 
-        # Apply the configuration to the Sanic app
-        config = load_config("config.toml")
-        # pprint.pp(config)
+    # Apply the configuration to the Sanic app
+    config = load_config("config.toml")
+    # pprint.pp(config)
 
-        # Update with 'app' section
-        app.config.update(config)
-        # pprint.pp(app.config)
+    # Update with 'app' section
+    # app.config.update(config)
 
-        db_config = await load_database_config(config)
+    db_config = load_database_config(config)
+    app.config.update(db_config)
 
-        # Setup database connection
-        dsn = await db_conn(config=db_config)
-        app.ctx.pool = await db_pool(dsn, loop)
 
-        # Load email config
-        # app.ctx.mailConfig = await load_mail_config(config)
+    # Load email config
+    # app.ctx.mailConfig = await load_mail_config(config)
 
         # Set up paystack configuration
-        paystackConfig = await load_paystack_config(config)
-        app.config.update(paystackConfig)
+    paystackConfig = load_paystack_config(config)
+
+
+    app.config.update(config)
+
+
+
+    @app.before_server_start
+    async def setup(app, loop):
+        """ Set up application workers """
+        pprint.pp(app.config)
+
+        # Setup database connection
+        dsn = await db_conn(config=app.config['database'])
+        app.ctx.pool = await db_pool(dsn, loop)
 
         # Set up aiohttp ClientSession
         app.ctx.aiohttpClient = aiohttp.ClientSession()
         # httpxClient
         app.ctx.httpxClient = httpx.AsyncClient()
+
         # Set up templating
         # app.ctx.template_env = await setupTemplating(app)
 
-        # Setup ECDSA keys
-        await register_services(app)
-
-        await setup_middleware(app)
         # Setup application routing
         await router(app)
         # Register applications
         await register_apps(app)
 
+        await register_services(app)
+        await setup_middleware(app)
 
     return app
 
