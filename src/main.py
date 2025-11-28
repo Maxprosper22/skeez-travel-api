@@ -31,7 +31,9 @@ from src.urls import router
 
 import pprint
 
+
 load_dotenv()
+
 
 def load_config(file_path):
     try:
@@ -108,7 +110,7 @@ def create_app() -> Sanic:
 
     app.static("/static", "./src/assets")
 
-    @app.listener("before_server_start")
+    @app.main_process_start
     async def application_setup(app, loop):
         """ Server setup """
         

@@ -18,5 +18,6 @@ class TicketService:
 
         async with pool.acquire() as conn:
             trip_records = await conn.fetch("""SELECT trips.* FROM courses c
-       JOIN student_courses sc ON c.course_id = sc.course_id
-       WHERE sc.student_id = $1""")
+                JOIN student_courses sc ON c.course_id = sc.course_id
+                WHERE sc.student_id = $1
+            """)
