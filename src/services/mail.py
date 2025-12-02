@@ -17,13 +17,16 @@ class MailConfig(BaseModel):
     password: str
 
 
-def load_mail_config(config):
+def load_mail_config():
     """ Load email config. Dependent on tye environment """
     env = config.get('app')["ENV"]
-    match env:
-        case "dev":
+    # match env:
+        # case "dev":
             # Load email config and add the password from environment
-            mail_config = config['mail']
+            mail_config = {}
+            mail_config['SUPPORT'] = os.getenv("MAIL_SUPPORT")
+            mail_config['ADMIN'] = os.getenv("MAIL_ADMIN")
+            mail_comfig["NOREPLY"] = os.getenv("MAIL_NOREPLY")
             mail_config["PASSWORD"] = os.getenv("MAIL_PASSWORD")  # Get password from env
             if not mail_config["PASSWORD"]:
                 raise ValueError("DEV_SMTP_PASSWORD environment variable is not set")

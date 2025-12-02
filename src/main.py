@@ -46,10 +46,14 @@ def load_config(file_path):
         raise Exception(f"Invalid TOML format in {file_path}")
 
 
-def load_database_config(config):
+def load_database_config():
     """ Load database config. Dependent on the environment """
     try:
-        db_config = config["database"]
+        db_config = {}
+        db_config["DB_NAME"] = os.getenv("DB_NAME")
+        db_config["DB_USER"] = os.getenv("DB_USER")
+        db_config["DB_HOST"] = os.getenv("DB_HOST")
+        db_config["DB_PROT"] = os.getenv("DB_PORT")
         db_config["DB_PASSWORD"] = os.getenv("DB_PASSWORD")  # Get password from env
 
         if not db_config["DB_PASSWORD"]:
@@ -148,12 +152,12 @@ def create_app() -> Sanic:
     # Update with 'app' section
     # app.config.update(config)
 
-    db_config = load_database_config(config)
+    db_config = load_database_config()
     # app.config.update(db_config)
 
 
     # Load email config
-    app.ctx.mailConfig = load_mail_config(config)
+    app.ctx.mailConfig = load_mail_config()
 
         # Set up paystack configuration
     paystackConfig = load_paystack_config(config)
@@ -169,7 +173,7 @@ def create_app() -> Sanic:
         # pprint.pp(app.config)
 
         # Setup database connection
-        dsn = await db_conn(config=app.config['database'])
+        dsn = await db_conn(db_config)
         app.ctx.pool = await db_pool(dsn, loop)
 
         # Set up aiohttp ClientSession
