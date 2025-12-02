@@ -23,13 +23,14 @@ def load_mail_config():
     # match env:
         # case "dev":
             # Load email config and add the password from environment
-            mail_config = {}
-            mail_config['SUPPORT'] = os.getenv("MAIL_SUPPORT")
-            mail_config['ADMIN'] = os.getenv("MAIL_ADMIN")
-            mail_comfig["NOREPLY"] = os.getenv("MAIL_NOREPLY")
-            mail_config["PASSWORD"] = os.getenv("MAIL_PASSWORD")  # Get password from env
-            if not mail_config["PASSWORD"]:
-                raise ValueError("DEV_SMTP_PASSWORD environment variable is not set")
+    mail_config = {}
+    mail_config['SUPPORT'] = os.getenv("MAIL_SUPPORT")
+    mail_config['ADMIN'] = os.getenv("MAIL_ADMIN")
+    mail_comfig["NOREPLY"] = os.getenv("MAIL_NOREPLY")
+    mail_config["PASSWORD"] = os.getenv("MAIL_PASSWORD")  # Get password from env
+            
+    if not mail_config["PASSWORD"]:
+        raise ValueError("DEV_SMTP_PASSWORD environment variable is not set")
             
             # mailconfig = MailConfig(
             #     host=_config["HOST"],
@@ -37,7 +38,7 @@ def load_mail_config():
             #     username=_config["USERNAME"],
             #     password=_config["DEV_SMTP_PASSWORD"]
             # )
-            return mail_config
+    return mail_config
 
         
 async def welcome_mail(app: Sanic, config: MailConfig, message: EmailMessage, account: Account):
