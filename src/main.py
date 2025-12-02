@@ -16,6 +16,7 @@ from src.utils.db import db_conn, db_pool
 
 from src.services import register_services
 from src.services.celery_app import app as celeryapp, email_verification, email_reset_link
+from src.services.mail import load_mail_config
 
 from src.services.magiclink import SecureMagicLink
 
@@ -50,7 +51,7 @@ def load_database_config(config):
     try:
         db_config = config["database"]
         db_config["DB_PASSWORD"] = os.getenv("DB_PASSWORD")  # Get password from env
-        pprint.pp(db_config)
+
         if not db_config["DB_PASSWORD"]:
             raise ValueError("DB_PASSWORD environment variable is not set")
 
@@ -62,16 +63,16 @@ def load_database_config(config):
 def load_paystack_config(config):
     """ Load paystack configuration """
     try:
-        paystack_config = config.get('paystack', {})
-        paystack_config['SECRET_KEY'] = os.getenv("PAYSTACK_SECRET_KEY")
-        paystack_config['PUBLIC_KEY'] = os.getenv("PAYSTACK_PUBLIC_KEY")
+        config['paystack'] = {}
+        config['paystack']['SECRET_KEY'] = os.getenv("PAYSTACK_SECRET_KEY")
+        config['paystack']['PUBLIC_KEY'] = os.getenv("PAYSTACK_PUBLIC_KEY")
 
-        if not paystack_config['SECRET_KEY']:
+        if not config['paystack']['SECRET_KEY']:
             raise ValueError("Paystack Secret key missing")
-        elif not paystack_config['PUBLIC_KEY']:
+        elif not config['paystack']['PUBLIC_KEY']:
             raise ValueError('Paystack public key missing')
 
-        return paystack_config
+        # return paystack_config
 
     except Exception as e:
         raise e
@@ -99,7 +100,7 @@ def create_app() -> Sanic:
     # Serve index.html for all non-static routes to support TanStack Router
     @app.get("/<path:path>")
     async def serve_index(request, path: str):
-        pprint.pp(app.config.FRONTEND_DIR)
+        # pprint.pp(app.config.FRONTEND_DIR)
         index_path = app.config.DIST_DIR / "index.html"
         # pprint.pp(index_path)
         if not index_path.exists():
@@ -140,7 +141,6 @@ def create_app() -> Sanic:
     }
 
 
-
     # Apply the configuration to the Sanic app
     config = load_config("config.toml")
     # pprint.pp(config)
@@ -149,11 +149,11 @@ def create_app() -> Sanic:
     # app.config.update(config)
 
     db_config = load_database_config(config)
-    app.config.update(db_config)
+    # app.config.update(db_config)
 
 
     # Load email config
-    # app.ctx.mailConfig = await load_mail_config(config)
+    app.ctx.mailConfig = load_mail_config(config)
 
         # Set up paystack configuration
     paystackConfig = load_paystack_config(config)
@@ -166,7 +166,7 @@ def create_app() -> Sanic:
     @app.before_server_start
     async def setup(app, loop):
         """ Set up application workers """
-        pprint.pp(app.config)
+        # pprint.pp(app.config)
 
         # Setup database connection
         dsn = await db_conn(config=app.config['database'])

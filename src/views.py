@@ -108,7 +108,6 @@ async def view_trip(request: Request, tripid: str):
 
     tripId = UUID(hex=tripid)
     tripData = await tripService.fetch_trip(pool, tripId)
-    pprint.pp(tripData)
     if not tripData:
         return sanjson(body={'info': 'Trip not found'})
 

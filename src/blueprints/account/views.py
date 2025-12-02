@@ -5,6 +5,7 @@ from sanic.views import HTTPMethodView
 
 from uuid import UUID
 import pprint, traceback
+import asyncio
 
 from pydantic_extra_types.phone_numbers import PhoneNumber
 
@@ -177,6 +178,7 @@ async def signup(request: Request):
         accountCtx = app.ctx.accountCtx
         Account = accountCtx["Account"]
         accountService = accountCtx["AccountService"]
+        email_verification = app.ctx.tasks['email_verification']
 
         adminCtx = app.ctx.adminCtx
         Admin = adminCtx["Admin"]
@@ -233,9 +235,57 @@ async def signup(request: Request):
                         
         if not account_created:
             return sanjson(status=500, body={'info': 'An error occurred during account creation.'})
-        account = await accountService.fetch_user(pool=pool, email=new_account.email)              
+
+        # Create verification link
+        verification_link = await app.ctx.EmailVerificationLink.create_link(accountid=new_account.account_id, email=new_account.email)
+        # pprint.pp(app.config)
+        
+        # Send verification email
+        await asyncio.to_thread(
+            email_verification,
+            password=app.config.mail['PASSWORD'],
+            link=verification_link,
+            messageFrom=app.config.mail['NOREPLY'],
+            messageTo=new_account.email
+        )
+        return sanjson(status=200, body={
+            'info': 'Success'
+            })
+
+    except Exception as e:
+        raise e
+
+
+async def confirm_account(request: Request, token: str):
+    """ Confirm a user's email account """
+    try:
+        if not token:
+            return sanjson(status=400, body={
+                'info': 'Bad request'
+            })
+
+        app = request.app
+        pool = app.ctx.pool
+        
+        EmailVerificationLink = app.ctx.EmailVerificationLink
+        Account = app.ctx.accountCtx['Account']
+        accountService = app.ctx.accountCtx['AccountService']
+        tokenCtx = app.ctx.tokenCtx 
+        Token = tokenCtx['Token']
+        tokenType = tokenCtx['TokenType']
+        tokenService = app.ctx.tokenCtx['TokenService']
+        
+        verifyAccount = await EmailVerificationLink.verify_token(token)
+        pprint.pp(verifyAccount)
+
+        if not verifyAccount:
+            return sanjson(status400, body={
+                'info': 'Bad request'
+                })
+
+        account = await accountService.fetch_user(pool=pool, email=verifyAccount['email'])        
         newToken = Token(
-            account_id = account.account_id,
+            account_id = account['account_id'],
             valid = True,
             token_type = tokenType.AUTH
         )

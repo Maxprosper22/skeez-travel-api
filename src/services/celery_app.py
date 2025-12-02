@@ -8,7 +8,7 @@ import smtplib
 from celery import Celery
 
 
-app = Celery('skrid', broker='redis://localhost:6379/0')
+app = Celery('skrid', broker='redis://localhost:6379/1')
 
 #async def celery_app():
 #    """ Setup celery app """

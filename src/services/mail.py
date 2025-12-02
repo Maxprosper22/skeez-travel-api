@@ -16,39 +16,26 @@ class MailConfig(BaseModel):
     username: str
     password: str
 
-async def load_mail_config(config):
+
+def load_mail_config(config):
     """ Load email config. Dependent on tye environment """
     env = config.get('app')["ENV"]
     match env:
         case "dev":
             # Load email config and add the password from environment
-            _config = config.get("dev", {})['mail']
-            _config["DEV_SMTP_PASSWORD"] = os.getenv("DEV_SMTP_PASSWORD")  # Get password from env
-            if not _config["DEV_SMTP_PASSWORD"]:
+            mail_config = config['mail']
+            mail_config["PASSWORD"] = os.getenv("MAIL_PASSWORD")  # Get password from env
+            if not mail_config["PASSWORD"]:
                 raise ValueError("DEV_SMTP_PASSWORD environment variable is not set")
             
-            mailconfig = MailConfig(
-                host=_config["HOST"],
-                port=_config["PORT"],
-                username=_config["USERNAME"],
-                password=_config["DEV_SMTP_PASSWORD"]
-            )
-            return mailconfig
+            # mailconfig = MailConfig(
+            #     host=_config["HOST"],
+            #     port=_config["PORT"],
+            #     username=_config["USERNAME"],
+            #     password=_config["DEV_SMTP_PASSWORD"]
+            # )
+            return mail_config
 
-        case "prod":
-            # Load database config and add the password from environment
-            _config = config.get("prod", {})['mail']
-            _config["PROD_SMTP_PASSWORD"] = os.getenv("PROD_SMTP_PASSWORD")  # Get password from env
-            if not _config["PROD_SMTP_PASSWORD"]:
-                raise ValueError("PROD_SMTP_PASSWORD environment variable is not set")
-
-            mailconfig = MailConfig(
-                host=_config["HOST"],
-                port=_config["PORT"],
-                username=_config["USERNAME"],
-                password=_config["DEV_SMTP_PASSWORD"]
-            )
-            return mailconfig
         
 async def welcome_mail(app: Sanic, config: MailConfig, message: EmailMessage, account: Account):
     """ Welcome enail sent to new users """

@@ -31,9 +31,10 @@ dependencies = [
     "itsdangerous",
     "pyotp",
     "mailbridge>=2.0.0",
-    "celery>=5.5.3",
+    "celery[redis]>=5.5.3",
     "pyjwt>=2.10.1",
     "supabase>=2.16.0",
+    "valkey>=6.1.1",
 ]
 
 # [build-system]

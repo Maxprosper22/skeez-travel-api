@@ -58,7 +58,7 @@ uv run sanic src.main:create_app \
 SANIC_PID=$!
 
 # Start celery
-uv run celery -A src.services.celery_app:app worker --logleve=info concurrency=8 &
+uv run celery -A src.services.celery_app.app worker --logleve=info concurrency=8 &
 
 CELERY_PID =$!
 
