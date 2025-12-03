@@ -1,8 +1,6 @@
 from asyncpg import create_pool, Pool
 from dynaconf import Dynaconf
 # from sanic.
-import urllib
-
 
 async def db_conn(config: Dynaconf) -> str:
     """ Initialize database connection """
@@ -14,7 +12,7 @@ async def db_conn(config: Dynaconf) -> str:
     DB_NAME = config["DB_NAME"]
     # DB_PASSWORD = config["DB_PASSWORD"]
     
-    dsn = f"postgres://{DB_USER}:{DB_PASS}@{urllib.parse.quote_plus(DB_HOST)}:{DB_PORT}/{DB_NAME}"
+    dsn = f"postgres://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     return dsn
 
 
