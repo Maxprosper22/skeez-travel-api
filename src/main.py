@@ -36,15 +36,15 @@ import pprint
 load_dotenv()
 
 
-def load_config(file_path):
-    try:
-        with open(file_path, "r") as config_file:
-            return toml.load(config_file)
-    except FileNotFoundError:
-        raise Exception(f"Configuration file {file_path} not found")
-    except toml.TomlDecodeError:
-        raise Exception(f"Invalid TOML format in {file_path}")
-
+# def load_config(file_path):
+#     try:
+#         with open(file_path, "r") as config_file:
+#             return toml.load(config_file)
+#     except FileNotFoundError:
+#         raise Exception(f"Configuration file {file_path} not found")
+#     except toml.TomlDecodeError:
+#         raise Exception(f"Invalid TOML format in {file_path}")
+#
 
 def load_database_config():
     """ Load database config. Dependent on the environment """
@@ -64,7 +64,7 @@ def load_database_config():
         raise e
 
 
-def load_paystack_config(config):
+def load_paystack_config():
     """ Load paystack configuration """
     try:
         config['paystack'] = {}
@@ -146,7 +146,7 @@ def create_app() -> Sanic:
 
 
     # Apply the configuration to the Sanic app
-    config = load_config("config.toml")
+    # config = load_config("config.toml")
     # pprint.pp(config)
 
     # Update with 'app' section
@@ -159,11 +159,9 @@ def create_app() -> Sanic:
     # Load email config
     app.ctx.mailConfig = load_mail_config()
 
-        # Set up paystack configuration
-    paystackConfig = load_paystack_config(config)
+    # Set up paystack configuration
+    paystackConfig = load_paystack_config()
 
-
-    app.config.update(config)
 
 
 
