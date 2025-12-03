@@ -50,11 +50,11 @@ def load_database_config():
     """ Load database config. Dependent on the environment """
     try:
         db_config = {}
-        db_config["DB_NAME"] = os.getenv("DB_NAME")
-        db_config["DB_USER"] = os.getenv("DB_USER")
-        db_config["DB_HOST"] = os.getenv("DB_HOST")
-        db_config["DB_PORT"] = os.getenv("DB_PORT")
-        db_config["DB_PASSWORD"] = os.getenv("DB_PASSWORD")  # Get password from env
+        db_config["DB_NAME"] = os.getenv("PGDATABASE")
+        db_config["DB_USER"] = os.getenv("PGUSER")
+        db_config["DB_HOST"] = os.getenv("PGHOST")
+        db_config["DB_PORT"] = os.getenv("PGPORT")
+        db_config["DB_PASSWORD"] = os.getenv("PGPASSWORD")  # Get password from env
 
         if not db_config["DB_PASSWORD"]:
             raise ValueError("DB_PASSWORD environment variable is not set")
