@@ -53,7 +53,7 @@ def load_database_config():
         db_config["DB_NAME"] = os.getenv("DB_NAME")
         db_config["DB_USER"] = os.getenv("DB_USER")
         db_config["DB_HOST"] = os.getenv("DB_HOST")
-        db_config["DB_PROT"] = os.getenv("DB_PORT")
+        db_config["DB_PORT"] = os.getenv("DB_PORT")
         db_config["DB_PASSWORD"] = os.getenv("DB_PASSWORD")  # Get password from env
 
         if not db_config["DB_PASSWORD"]:
