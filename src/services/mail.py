@@ -22,7 +22,7 @@ def load_mail_config():
     mail_config = {}
     mail_config['SUPPORT'] = os.getenv("MAIL_SUPPORT")
     mail_config['ADMIN'] = os.getenv("MAIL_ADMIN")
-    mail_comfig["NOREPLY"] = os.getenv("MAIL_NOREPLY")
+    mail_config["NOREPLY"] = os.getenv("MAIL_NOREPLY")
     mail_config["PASSWORD"] = os.getenv("MAIL_PASSWORD")  # Get password from env
             
     if not mail_config["PASSWORD"]:
