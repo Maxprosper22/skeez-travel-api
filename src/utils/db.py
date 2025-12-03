@@ -19,5 +19,5 @@ async def db_conn(config: Dynaconf) -> str:
 async def db_pool(dsn: str, loop) -> Pool:
     """ DB connection pool """
 
-    pool = await create_pool(dsn=dsn, loop=loop, statement_cache_size=0)
+    pool = await create_pool(dsn=dsn, loop=loop)
     return pool
