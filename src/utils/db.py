@@ -14,7 +14,7 @@ async def db_conn(config: Dynaconf) -> str:
     DB_NAME = config["DB_NAME"]
     # DB_PASSWORD = config["DB_PASSWORD"]
     
-    dsn = urllib.parse.quote_plus(f"postgres://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
+    dsn = f"postgres://{DB_USER}:{DB_PASS}@{urllib.parse.quote_plus(DB_HOST)}:{DB_PORT}/{DB_NAME}"
     return dsn
 
 
