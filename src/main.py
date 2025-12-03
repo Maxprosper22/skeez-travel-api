@@ -67,13 +67,13 @@ def load_database_config():
 def load_paystack_config():
     """ Load paystack configuration """
     try:
-        config['paystack'] = {}
-        config['paystack']['SECRET_KEY'] = os.getenv("PAYSTACK_SECRET_KEY")
-        config['paystack']['PUBLIC_KEY'] = os.getenv("PAYSTACK_PUBLIC_KEY")
+        paystack_config = {}
+        paystack_config['SECRET_KEY'] = os.getenv("PAYSTACK_SECRET_KEY")
+        paystack_config['PUBLIC_KEY'] = os.getenv("PAYSTACK_PUBLIC_KEY")
 
-        if not config['paystack']['SECRET_KEY']:
+        if not paystack_config['SECRET_KEY']:
             raise ValueError("Paystack Secret key missing")
-        elif not config['paystack']['PUBLIC_KEY']:
+        elif not paystack_config['PUBLIC_KEY']:
             raise ValueError('Paystack public key missing')
 
         # return paystack_config
