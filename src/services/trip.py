@@ -191,7 +191,7 @@ class TripService:
             raise e        
 
 
-    async def book(self, pool: Pool, tripid: UUID, accountid: UUID):
+    async def book(self, pool: Pool, tripid: UUID, accountid: UUID, data: Dict):
         """ Adds a user to a trip's list """
         try:
             # tripData = await self.fetch_trip(pool, tripid)
@@ -205,14 +205,27 @@ class TripService:
             
             async with pool.acquire() as conn:
                 await conn.execute("""
-                    INSERT INTO
-                        tickets (
-                            trip_id, account_id
-                        ) VALUES ($1, $2)""",
-                tripid, accountid)         
+                    INSERT INTO tickets (
+                        trip_id, account_id, data
+                    ) VALUES ($1, $2, $3)""",
+                tripid, accountid, json.dumps(data))
             
         except Exception as e:
             raise e
+
+
+        async def close_booking(self, pool: Pool, tripid: UUID, accountid: UUID):
+            """ Complete a trip booking transaction """
+            try:
+                async with pool.acquire() as conn:
+                    async with conn.transaction():
+                        await conn.execute("UPDATE tickets SET status=true WHERE trip_id=$1 AND account_id=$3", tripid, accountid)
+                        ticket = await conn.fetchrow("SELECT * FROM tickets WHERE trip_id=$1 AND account_id=$2", tripid, account_id)
+
+                return ticket if ticket else None
+
+            except Exception as e:
+                raise e
 
 
     async def unbook(self, pool: Pool, tripid: UUID, accountid: UUID):
@@ -328,11 +341,11 @@ class TripService:
             raise e
 
 
-    async def fetch_trip(cls, pool: Pool, tripid: UUID) -> Optional[Trip]:
+    async def fetch_trip(self, tripid: UUID) -> Optional[Trip]:
         """ Retrieve trip with matching id """
         
         pprint.pp(tripid)
-        async with pool.acquire() as conn:
+        async with self.pool.acquire() as conn:
             trip_rec = await conn.fetchrow("""
                 SELECT
                     trp.*,

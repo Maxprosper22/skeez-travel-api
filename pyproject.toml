@@ -35,6 +35,7 @@ dependencies = [
     "pyjwt>=2.10.1",
     "supabase>=2.16.0",
     "valkey>=6.1.1",
+    "sqlalchemy>=2.0.44",
 ]
 
 [build-system]

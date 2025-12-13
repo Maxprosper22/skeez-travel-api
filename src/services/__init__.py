@@ -16,7 +16,7 @@ from .admin import AdminService
 from src.models.admin import Admin, AdminRole
 
 from.ticket import TicketService
-from src.models.ticket import Ticket
+from src.models.ticket import Ticket, TicketStatus
 from .pubsub import PubSub, ClientSubscription, Publisher, Subscriber, Channel, EmailSubscriber, SMSSubscriber, SSESubscriber
 
 async def register_services(app: Sanic) -> None:
@@ -77,6 +77,7 @@ async def register_services(app: Sanic) -> None:
 
     app.ctx.ticketCtx = {
         "Ticket": Ticket,
+        "TicketStatus": TicketStatus,
         "TicketService": TicketService()
     }
 

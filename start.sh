@@ -7,39 +7,39 @@ echo "Setting up virtual environment and installing dependencies..."
 uv sync --all-extras --no-install-project
 source .venv/bin/activate
 
-# echo "Loading .env secrets"
-# if [ -f .env ]; then
-  # set -a   # Automatically export all variables
-  # source .env || true   # source the file
-  # set +a     # turn it off again
-# else 
-  # echo ".env not found, continuing without secrets..."
-# fi
+echo "Loading .env secrets"
+if [ -f .env ]; then
+  set -a   # Automatically export all variables
+  source .env || true   # source the file
+  set +a     # turn it off again
+else 
+  echo ".env not found, continuing without secrets..."
+fi
 
-echo "Reading configurations..."
-CONFIG_FILE="config.toml"
-
-PORT=$(uv run python - <<'PY'
-import toml, sys
-try:
-  data = toml.load(open("config.toml"))
-  print(data.get("app", {}).get("PORT", 8080))
-except Exception as e:
-  print(f"Error reading config.toml: {e}", file=sys.stderr)
-  sys.exit(1)  
-PY
-)
-
-HOST=$(uv run python - <<'PY'
-import toml, sys
-try:
-  data = toml.load(open("config.toml"))
-  print(data.get("app", {}).get("HOST", "0.0.0.0"))
-except Exception as e:
-  print(f"Error reading config.toml: {e}", file=sys.stderr)
-  sys.exit(1)  
-PY
-)
+# echo "Reading configurations..."
+# CONFIG_FILE="config.toml"
+#
+# PORT=$(uv run python - <<'PY'
+# import toml, sys
+# try:
+#   data = toml.load(open("config.toml"))
+#   print(data.get("app", {}).get("PORT", 8080))
+# except Exception as e:
+#   print(f"Error reading config.toml: {e}", file=sys.stderr)
+#   sys.exit(1)  
+# PY
+# )
+#
+# HOST=$(uv run python - <<'PY'
+# import toml, sys
+# try:
+#   data = toml.load(open("config.toml"))
+#   print(data.get("app", {}).get("HOST", "0.0.0.0"))
+# except Exception as e:
+#   print(f"Error reading config.toml: {e}", file=sys.stderr)
+#   sys.exit(1)  
+# PY
+# )
 
 
 echo "Starting Sanic at http://$HOST:$PORT"
@@ -50,8 +50,8 @@ uv run sanic src.main:create_app \
   --port="$PORT" \
   --workers=2 \
   --access-log \
-  --reload \
-  -R src/ \
+  -r \
+  -R src \
   -R config.toml \
   --dev
 

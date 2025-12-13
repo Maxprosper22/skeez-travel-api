@@ -2,9 +2,12 @@ from sanic import Sanic
 from sanic.response import html as sanhtml, text as santext, json as sanjson
 from sanic.request import Request
 from sanic.views import HTTPMethodView
-from returns.maybe import Maybe, Some, Nothing
+# from returns.maybe import Maybe, Some, Nothing
+
+from apscheduler.triggers.cron import CronTrigger
 
 import pprint
+
 
 async def view_destinations(request: Request):
     try:
@@ -19,6 +22,7 @@ async def view_destinations(request: Request):
         return sanjson(body={'data': destinations if destinations else None})
     except Exception as e:
         raise e
+
 
 async def new_destination(request: Request):
     try:
@@ -40,6 +44,7 @@ async def new_destination(request: Request):
         return sanjson(body={'data': data})
     except Exception as e:
         raise e
+
 
 async def view_accounts(request: Request):
     """ View and manage accounts """
@@ -80,6 +85,7 @@ async def view_accounts(request: Request):
     except Exception as e:
         raise e
 
+
 async def fetch_accounts(request: Request):
     """ 
         Retrieve data on accounts
@@ -119,6 +125,7 @@ async def fetch_accounts(request: Request):
     except Exception as e:
         raise e
 
+
 async def view_trips(request: Request):
     """ Loads trip data """
 
@@ -132,6 +139,7 @@ async def view_trips(request: Request):
 
     except Exception as e:
         raise e
+
 
 async def fetch_trips(request: Request):
     """ 
@@ -184,9 +192,13 @@ async def create_trip(request: Request):
     tripStatus = tripCtx['TripStatus']    # Trip status enum class
 
     Trip = tripCtx['Trip']     # Trip class object (not instance!)
+    
+    scheduler = app.ctx.scheduler
+    sse_clients = app.ctx.SSEClients
 
     trip_data = request.json    # Form data submitted
     pprint.pp(trip_data)
+
     match trip_data:
         case None:
             return sanjson(
@@ -229,10 +241,10 @@ async def create_trip(request: Request):
                 })
 
     new_trip = Trip(
-            destination=trip_data['destination'],
-            date=trip_data['date'],
-            status=trip_data['status'],
-            capacity=trip_data['capacity']
+        destination=trip_data['destination'],
+        date=trip_data['date'],
+        status=trip_data['status'],
+        capacity=trip_data['capacity']
     )
     print(new_trip)
 
@@ -248,6 +260,32 @@ async def create_trip(request: Request):
                 'msg': 'Trip not created'
             }
         )
+
+    alarm_date = saved_trip.date - timedelta(days=2)
+    scheduler.add_job(
+        trip_task,
+        trigger=CronTrigger(
+            start_date=alarm_date,
+            end_date=trip.date
+        ),
+        app=app,
+        id=saved_trip.trip_id.hex,
+        coalesce=True,
+        replace_existing=True
+    )
+
+    trip_dict = saved_trip.model_dump()
+    if type(trip_dict['trip_id']) == UUID:
+        trip_dict['trip_id'] = trip_dict['trip_id'].hex
+    if type(trip_dict['destination']['destination_id']) == UUID:
+        trip_dict['destination']['destination_id'] = trip_dict['destination']['destination_id'].hex
+    if trip_dict['accounts']:
+        for account in trip_dic['accounts']:
+            if type(account['account_id']) == UUID:
+                account['account_id'] = account['account_id'].hex
+
+    for client in sse_clients:
+        client[0].send(f"event: notice\ndata: {json.dumps({'message': 'New Trip created', 'data': trip_dict})}\n\n")
         
     # Send signal to websocket hanlder to update trip listing 
     return sanjson(
@@ -266,11 +304,13 @@ async def start_trip(request: Request, trip_id: str):
         Method: Patch
     """
 
+
 async def end_trip(request: Request, trip_id: str):
     """ 
         Handles trip completion
         Method: Get
     """
+
 
 async def cancel_trip(request: Request, trip_id: str):
     """ 
@@ -278,33 +318,27 @@ async def cancel_trip(request: Request, trip_id: str):
         Method: Put
     """
 
+
 class TripView(HTTPMethodView):
     async def get(self, request: Request, trip_id: str):
         """ Fetch a specific trip """
 
+
     async def post(self, request: Request):
         """ Create a new trip """
+
 
     async def delete(self, request: Request, trip_id: str):
         """ Delete a trip """
 
+
     async def patch(self, request: Request, trip_id, **kwargs):
         """ Update trip data """
+
 
     async def put(self, request: Request):
         """ Update trip """
 
-
-# class AdminAuthView(HTTPMethodView):
-#     async def get(request: Request):
-#         """ Admin authentication page handle """
-#
-#         app = request.app
-#         pool = app.ctx.pool
-#
-#         template = app.ctx.template_env.get_template("admin/signin.html").render()
-#
-#         return sanhtml(template)
 
 async def new_admin(request: Request) -> sanjson:
     """ Create new admin accounts """
@@ -396,6 +430,7 @@ async def new_admin(request: Request) -> sanjson:
     except Exception as e:
         raise e
 
+
 async def signin(request: Request):
     """ Admin authentication endpoint """
     app = request.app
@@ -456,6 +491,7 @@ async def signin(request: Request):
                 body={
                     'msg': 'Bad request. Credentials not provided'
             })
+
 
 async def admin_ws(request, ws):
     """ Admin websocket endpoint """

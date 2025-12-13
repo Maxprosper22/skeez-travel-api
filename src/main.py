@@ -25,26 +25,21 @@ from src.blueprints import register_apps
 
 from cryptography.fernet import Fernet
 
-# from src.services.mail import load_mail_config
-
 from src.middlewares import setup_middleware
 from src.urls import router
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+# from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.jobstores.redis import RedisJobStore
+from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+
+# from sqlalchemy.ext.asyncio import create_async_engine
 
 import pprint
 
 
 load_dotenv()
 
-
-# def load_config(file_path):
-#     try:
-#         with open(file_path, "r") as config_file:
-#             return toml.load(config_file)
-#     except FileNotFoundError:
-#         raise Exception(f"Configuration file {file_path} not found")
-#     except toml.TomlDecodeError:
-#         raise Exception(f"Invalid TOML format in {file_path}")
-#
 
 def load_database_config():
     """ Load database config. Dependent on the environment """
@@ -76,7 +71,7 @@ def load_paystack_config():
         elif not paystack_config['PUBLIC_KEY']:
             raise ValueError('Paystack public key missing')
 
-        # return paystack_config
+        return paystack_config
 
     except Exception as e:
         raise e
@@ -87,39 +82,14 @@ def create_app() -> Sanic:
 
     app = Sanic("Skrid")
 
-    # Configuration
-    app.config.FRONTEND_DIR = Path(__file__).parent.parent / "skrid-web"
-    app.config.DIST_DIR = app.config.FRONTEND_DIR / "dist"
-
-    # Serve static assets (JS, CSS, etc.) from dist/assets
-    app.static("/assets", app.config.DIST_DIR / "assets", name="assets")
-
-    app.config.CORS_ORIGINS = ["http://127.0.0.1:8080", "http://localhost:3000", "http://127.0.0.1:3000"]
+    app.config.CORS_ORIGINS = [os.getenv("CLIENT_URL")]
     app.config.CORS_SUPPORTS_CREDENTIALS = True
     app.config.CORS_AUTOMATIC_OPTIONS = True
-    app.config.CORS_ALLOW_HEADERS = ['Origin', 'Accept', 'Content-Type', 'Access-Control-Allow-Origin', 'Authorization']
     Extend(app)
 
+    app.ctx.CLIENT_URL = os.getenv("CLIENT_URL")
 
-    # Serve index.html for all non-static routes to support TanStack Router
-    @app.get("/<path:path>")
-    async def serve_index(request, path: str):
-        # pprint.pp(app.config.FRONTEND_DIR)
-        index_path = app.config.DIST_DIR / "index.html"
-        # pprint.pp(index_path)
-        if not index_path.exists():
-            logger.error("index.html not found. Ensure `npm run build` has been run.")
-            return sanhtml("Frontend not built. Run `npm run build` in skrid-web.", status=500)
-        return await sanfile(index_path)
-
-
-    app.static("/static", "./src/assets")
-
-    # @app.main_process_start
-    # async def application_setup(app, loop):
-        # """ Server setup """
-        
-        # Load encryption key
+    # Load encryption key
     app.ctx.ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY').encode()
         
     fernetkey = Fernet(app.ctx.ENCRYPTION_KEY) 
@@ -144,25 +114,17 @@ def create_app() -> Sanic:
         'email_reset_link': email_reset_link
     }
 
-
-    # Apply the configuration to the Sanic app
-    # config = load_config("config.toml")
-    # pprint.pp(config)
-
-    # Update with 'app' section
-    # app.config.update(config)
-
     db_config = load_database_config()
     # app.config.update(db_config)
-
 
     # Load email config
     app.ctx.mailConfig = load_mail_config()
 
     # Set up paystack configuration
-    paystackConfig = load_paystack_config()
+    app.ctx.paystackConfig = load_paystack_config()
 
-
+    # Collection if SSE connections
+    app.ctx.SSEClients = set()
 
 
     @app.before_server_start
@@ -173,6 +135,25 @@ def create_app() -> Sanic:
         # Setup database connection
         dsn = await db_conn(db_config)
         app.ctx.pool = await db_pool(dsn, loop)
+
+        # Set up Scheduler
+        # sqlalchemy_engine = create_async_engine(f"postgresql+asyncpg://{db_config['DB_USER']}:{db_config['DB_PASSWORD']}@{db_config['DB_HOST']}:{db_config['DB_PORT']}/{db_config['DB_NAME']}") # Create async SQLAlchemy engine
+
+        jobstore = {
+            'default': RedisJobStore(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"))
+        }
+        executors = {
+            'default': ThreadPoolExecutor(20),
+            'processpool': ProcessPoolExecutor(5)
+        }
+        job_defaults = {
+            'coalesce': True,
+            'max_imstamces': 3,
+            'misfire_grace_time': 60
+        }
+
+        app.ctx.scheduler = AsyncIOScheduler(jobstores=jobstore, executors=executors, job_defaults=job_defaults)  # Create scheduler
+        app.ctx.scheduler.start()
 
         # Set up aiohttp ClientSession
         app.ctx.aiohttpClient = aiohttp.ClientSession()

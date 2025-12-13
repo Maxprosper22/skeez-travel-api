@@ -65,5 +65,9 @@ async def confirmation_mail(app: Sanic, config: MailConfig, message: EmailMessag
 async def password_reset_mail(app: Sanic, config: MailConfig, message: EmailMessage, account: Account):
     """ Email containing a link and token sent when a password change is requested """
 
-async def trip_alert_mail(app: Sanic, config: MailConfig, message: EmailMessage, account: Account):
+async def trip_alert(app: Sanic, config: MailConfig, message: EmailMessage, account: Account):
     """ Email sent to alert a user about appraoching date of trips """
+    try:
+        pass
+    except Exception as e:
+        raise e

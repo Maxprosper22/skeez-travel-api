@@ -3,7 +3,12 @@ from sanic.request import Request
 from sanic.response import html as sanhtml, json as sanjson, text as santext, file as sanfile, HTTPResponse
 from sanic.log import logger
 
-import pprint, json, asyncio
+import pprint
+import json
+import asyncio
+import hmac
+import hashlib
+
 from uuid import UUID
 
 from src.models.sse import BaseField, Event, Data, ID, Retry, Heartbeat, message
@@ -105,9 +110,10 @@ async def view_trip(request: Request, tripid: str):
     
     if tripid == None:
         return sanjson(401, {"info": "Invalid operation. No trip id provided"})  # A tuple containing a status code and a message: (status, message)
+    pprint.pp(f'View trip id: {tripid}')
 
     tripId = UUID(hex=tripid)
-    tripData = await tripService.fetch_trip(pool, tripId)
+    tripData = await tripService.fetch_trip(tripId)
     if not tripData:
         return sanjson(body={'info': 'Trip not found'})
 
@@ -129,7 +135,7 @@ async def view_trip(request: Request, tripid: str):
     return sanjson(body={'data': tripData})
 
 
-async def trip_sse(request: Request):
+async def trip_sse(request: Request, userid: str):
     """Pushes updates to clients via SSE."""
     try:
         app = request.app
@@ -140,60 +146,51 @@ async def trip_sse(request: Request):
         tripStatus = tripCtx['TripStatus']
         tripService = tripCtx['TripService']
 
-        pubsub = app.ctx.pubsub
-        publisher = app.ctx.Publisher
-        sse_subscriber = app.ctx.SSESubscriber
-        clientSubscription = app.ctx.clientSubscription
+        accountCtx = app.ctx.accountCtx
+        Account = accountCtx['Account']
+        accountService = accountCtx['AccountService']
 
-        user = request.ctx.user
-        
-        # Get trip IDs from query parameters
-        trip_ids = request.args.getlist("trip_id") or []
-        # Validate UUIDs
-        try:
-            trip_ids_set = {str(uuid.UUID(tid)) for tid in trip_ids} if trip_ids else set()
-        except ValueError:
-            return response.json({"error": "Invalid UUID in trip_id"}, status=400)
+        # user = request.ctx.user
 
-        # Default to all trips if none specified
-        if not trip_ids_set:
-            trips = await tripService.fetch(pool=pool)  # Assume async method
-            trip_ids_set = {trip["trip_id"] for trip in trips}
+        sse_clients = app.ctx.SSEClients
+
+        # if userid:
+        user = await accountService.fetch_user(accountid=UUID(hex=userid)) if userid else None
+            
         
         # Create a response with streaming enabled
         headers = {
             "Cache-Control": "no-cache",
             "Connection": "keep-alive"
         }
-        resp = await request.respond(
+        stream = await request.respond(
             headers=headers,
             content_type="text/event-stream"
         )
 
-        # Register client subscription
-        # client = clientSubscription(stream=resp, trip_ids=trip_ids_set)
-        # pubsub.subscribe(client, trip_ids_set)
+        client = (stream, user['accountid'] if user else None)
 
-        client = sse_subscriber(accountid=user['account_id'] if user else None, stream=resp)
-        publisher.channels["sse"].subscribe(client)
+        sse_clients.add(client)
+        print(stream)
+        pprint.pp(sse_clients)
 
         # Send initial welcome message
-        await resp.send(f"event: welcome\ndata: {json.dumps({'message': 'Connected to trip updates'})}\n\n")
+        await stream.send(f"event: welcome\ndata: {json.dumps({'message': 'Connected to trip updates'})}\n\n")
 
         # Keep connection alive with periodic keep-alive messages
         try:
             while True:
-                await resp.send(":\n\n")  # Keep-alive
+                await stream.send(":\n\n")  # Keep-alive
                 await asyncio.sleep(15)  # Every 15 seconds
         except asyncio.CancelledError:
-            # Client disconnected
-            publisher.channels['sse'].unsubscribe(client)
+            await stream.eof()
             logger.info("Client disconnected")
         except Exception as e:
-            publisher.channels['sse'].unsubscribe(client)
+            await stream.eof()
             logger.error(f"Unexpected error in SSE stream: {e}")
         finally:
-            await resp.eof()  # Ensure stream is closed
+            await stream.eof()  # Ensure stream is closed
+            sse_clients.discard(stream)
 
         pprint(f'Publisher: {publisher}')
 
@@ -214,7 +211,7 @@ async def book(request: Request, tripid: str):
         app = request.app
         pool = app.ctx.pool
 
-        paystackConfig = app.config['paystack']
+        paystackConfig = app.ctx.paystackConfig
 
         aiohttpClient = app.ctx.aiohttpClient
 
@@ -226,6 +223,9 @@ async def book(request: Request, tripid: str):
         tripStatus = tripCtx['TripStatus']
         tripService = tripCtx['TripService']
 
+        ticketCtx = app.ctx.ticketCtx
+        ticketStatus = ticketCtx['TicketStatus']
+
         booking_info = request.json
 
         if 'tripid' not in booking_info:
@@ -234,14 +234,14 @@ async def book(request: Request, tripid: str):
         if 'accountid' not in booking_info:
             return sanjson(status=400, body={'info': 'Bad request'})
 
-        trip_data = await tripService.fetch_trip(pool=pool, tripid=tripid)
+        trip_data = await tripService.fetch_trip(tripid=tripid)
         if not trip_data:
             return sanjson(status=404, body={'info': 'Trip not found'})
 
         if len(trip_data.slots) >= trip_data.capacity:
             return sanjson(status=400, body={'info': 'Trip at full capacity'})
 
-        trip = await tripService.fetch_trip(pool=pool, tripid=booking_info['tripid'])
+        trip = await tripService.fetch_trip(tripid=booking_info['tripid'])
 
         if not trip:
             return sanjson(status=404, body={'info': 'Trip not found'})
@@ -250,27 +250,36 @@ async def book(request: Request, tripid: str):
         if not user:
             return sanjson(status=403, body={'info': 'Forbidden'})
 
-        # headers = {
-        #     "Content-Type": "application/json",
-        #     "Authorization": f"Bearer {paystackConfig['SECRET_KEY']}"
-        # }
-        # payload = {'email': user['email'], 'amount': trip.destination.price}
-        # async with aiohttpClient as session:
-        #     async with session.post('https://api.paystack.co/transaction/initialize', json=payload, headers=headers) as resp:
-        #         pprint.pp(resp)
-        #         response = await resp.json()
-        #         pprint.pp(response)
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {paystackConfig['SECRET_KEY']}"
+        }
+        payload = {'email': user['email'], 'amount': trip.destination.price}
+        async with aiohttpClient.post('https://api.paystack.co/transaction/initialize', json=payload, headers=headers) as resp:
+            pprint.pp(resp)
+            response = await resp.json()
+            pprint.pp('Paystack response:')
+            pprint.pp(response)
 
-
+        # Check if user already booked a trip
         async with pool.acquire() as conn:
             ticket = await conn.fetchrow("SELECT * FROM tickets WHERE trip_id=$1 AND account_id=$2", booking_info["tripid"], booking_info["accountid"])
 
         if ticket:
             return sanjson(status=400, body={'info': 'You already have a reservation'})
+        
+        # Proceed to initialize transaction
+        await tripService.book(pool, UUID(booking_info['tripid']), UUID(booking_info['accountid']), data=response['data'])
 
-        await tripService.book(pool, UUID(booking_info['tripid']), UUID(booking_info['accountid']))
-
-        return sanjson(status=201, body={'info': 'Successfully booked trip', 'data': True})
+        return sanjson(
+            status=200,
+            body={
+                'info': 'Successfully booked trip', 
+                'data': {
+                    'access_code': response['data']['access_code']
+                }
+            }
+        )
 
     except Exception as e:
         raise e
@@ -303,6 +312,45 @@ async def unbook(request: Request, tripid: str):
                 'info': 'An error occurred while processing request'
                 })
         return sanjson(status=200, body={'info': "Operation SUCCESS"})
+
+    except Exception as e:
+        raise e
+    
+
+async def payment_webhook(request: Request):
+    """ Webhook for verifying payments """
+    try:
+        app = request.app
+        pool = app.ctx.pool
+
+        paystackConfig = app.cxt.paystackConfig
+
+        tripCtx = app,ctx.tripCtx
+        tripService = tripCtx['TripService']
+
+        payload = request.body  # Get data
+        signature = request.headers.get('x-paystack-signature')
+
+        if not payload or not signature:
+            return sanjson(status=400, body={'data': 'Bad request'})
+
+        # Compute HMAC SHA512 hash of payload with secret key
+        computed_hash = hmac.new(
+            paystackConfig['SECRET_KEY'],
+            payload,
+            hashlib.sha512
+        ).hexdigest()
+
+        # Cerify signature
+        if not hmac.compare_digest(computed_hash, signature):
+            return sanjson(status=400)
+
+        event = request.body
+
+        if event['event'] == "charge.success":
+            pprint.pp(event)
+
+        return sanjson(status=200)
 
     except Exception as e:
         raise e
