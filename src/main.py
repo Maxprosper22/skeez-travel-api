@@ -56,7 +56,8 @@ def load_database_config():
 
         return db_config
     except Exception as e:
-        raise e
+        logger.error(e)
+        # raise e
 
 
 def load_paystack_config():
@@ -74,20 +75,21 @@ def load_paystack_config():
         return paystack_config
 
     except Exception as e:
-        raise e
+        logger.error(e)
+        # raise e
 
 
 def create_app() -> Sanic:
     """" Application factory """
 
     app = Sanic("Skrid")
-    Extend(app)
-
-    app.config.CORS_ORIGINS = [os.getenv("CLIENT_URL")]
-    app.config.CORS_SUPPORTS_CREDENTIALS = True
-    app.config.CORS_AUTOMATIC_OPTIONS = True
 
     app.ctx.CLIENT_URL = os.getenv("CLIENT_URL")
+
+    app.config.CORS_ORIGINS = [app.ctx.CLIENT_URL]
+    app.config.CORS_SUPPORTS_CREDENTIALS = True
+    app.config.CORS_AUTOMATIC_OPTIONS = True
+    Extend(app)
 
     # Load encryption key
     app.ctx.ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY').encode()
@@ -157,8 +159,6 @@ def create_app() -> Sanic:
 
         # Set up aiohttp ClientSession
         app.ctx.aiohttpClient = aiohttp.ClientSession()
-        # httpxClient
-        app.ctx.httpxClient = httpx.AsyncClient()
 
         # Set up templating
         # app.ctx.template_env = await setupTemplating(app)
@@ -170,6 +170,12 @@ def create_app() -> Sanic:
 
         await register_services(app)
         await setup_middleware(app)
+
+    @app.after_server_stop
+    async def shutdown(app, loop):
+        await app.ctx.pool.close()    # Close asyncpg connection pool
+        app.ctx.scheduler.shutdown()  # Shutdown APScheduler
+        await app.ctx.aiohttpClient.close() # Shutdown AioHTTPClient session
 
     return app
 

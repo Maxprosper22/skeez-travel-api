@@ -5,9 +5,10 @@ from enum import Enum
 
 
 class TicketStatus(Enum):
-    CANCELLED = 'cancelled'
-    ACTIVE = 'active'
-    COMPLETE = 'complete'
+    PROCCESSING = 'processing'
+    FAILURE = 'failure'
+    SUCCESS = "success"
+    CANCELLED = "cancelled"
 
 
 class Ticket(BaseModel):

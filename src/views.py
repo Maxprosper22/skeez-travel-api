@@ -1,13 +1,14 @@
 from sanic import Sanic, Blueprint
 from sanic.request import Request
 from sanic.response import html as sanhtml, json as sanjson, text as santext, file as sanfile, HTTPResponse
-from sanic.log import logger
+from sanic.log import logger, error_logger
 
 import pprint
 import json
 import asyncio
 import hmac
 import hashlib
+import traceback
 
 from uuid import UUID
 
@@ -35,8 +36,11 @@ async def view_destinations(request: Request):
             destination['destination_id'] = destination['destination_id'].hex
 
         return sanjson(body={'data': destinations if destinations else None})
+
     except Exception as e:
-        raise e
+        logger.error(traceback.format_exc(e))
+
+        return sanjson(status=500, body={"info": "Internal server error"})
     
 
 async def view_trips(request: Request):
@@ -44,54 +48,62 @@ async def view_trips(request: Request):
         View available trips
         Method: Get
     """
+    try:
+        app = request.app
+        pool = app.ctx.pool
 
-    app = request.app
-    pool = app.ctx.pool
+        user = request.ctx.user
 
-    user = request.ctx.user
+        rendered_template = template.render(user=user)
+        return sanhtml(rendered_template)
 
-    rendered_template = template.render(user=user)
-    return sanhtml(rendered_template)
+    except Exception as e:
+        logger.error(traceback.format_exc(e))
+        return sanjson(status=500, body={'info': "An umexpected erroe occurred"})
 
 
 async def fetch_trips(request: Request):
     """ Api endpoint for retrieving trips """
+    try:
+        app = request.app
+        pool = app.ctx.pool
 
-    app = request.app
-    pool = app.ctx.pool
+        tripCtx = app.ctx.tripCtx
+        Trip = tripCtx['Trip']
+        tripStatus = tripCtx['TripStatus']
+        tripService = tripCtx['TripService']
 
-    tripCtx = app.ctx.tripCtx
-    Trip = tripCtx['Trip']
-    tripStatus = tripCtx['TripStatus']
-    tripService = tripCtx['TripService']
-
-    trips = await tripService.fetch(pool=pool)
+        trips = await tripService.fetch(pool=pool)
     
-    if not trips:
-        # rendered_template = template.render(trips=[])
-        return sanjson(body={'info': 'No trip available'})
+        if not trips:
+            # rendered_template = template.render(trips=[])
+            return sanjson(body={'info': 'No trip available'})
 
-    all_trips = []
+        all_trips = []
     
-    for trip in trips:
-        # tripItem = trip.model_dump()
+        for trip in trips:
+            # tripItem = trip.model_dump()
 
-        trip['trip_id'] = trip['trip_id'].hex
-        trip['destination_id'] = trip['destination_id'].hex
-        trip['destination']['destination_id'] = trip['destination']['destination_id'].hex
+            trip['trip_id'] = trip['trip_id'].hex
+            trip['destination_id'] = trip['destination_id'].hex
+            trip['destination']['destination_id'] = trip['destination']['destination_id'].hex
 
-        trip['destination']['price'] = int(trip['destination']['price'])
-        # trip['status'] = trip['status'].value
-        trip['date'] = trip['date'].isoformat()
+            trip['destination']['price'] = int(trip['destination']['price'])
+            # trip['status'] = trip['status'].value
+            trip['date'] = trip['date'].isoformat()
 
-        for slot in trip['slots']:
-            slot['account_id'] = slot['account_id'].hex
-            slot['join_date'] = slot['join_date'].isoformat()
-            slot.pop('password')
+            for slot in trip['slots']:
+                slot['account_id'] = slot['account_id'].hex
+                slot['join_date'] = slot['join_date'].isoformat()
+                slot.pop('password')
 
-        all_trips.append(trip)
+            all_trips.append(trip)
+        # pprint.pp(logger.__dict__)
+        return sanjson(body={'data': all_trips})
 
-    return sanjson(body={'data': all_trips})
+    except Exception as e:
+        logger.error(traceback.format_exc(e))
+        return sanjson(status=500, body={'info': 'An error occurred'})
 
 
 async def view_trip(request: Request, tripid: str):
@@ -99,40 +111,44 @@ async def view_trip(request: Request, tripid: str):
         Retrieve data for a specific trip
         Method: Get
     """
-    
-    app = request.app
-    pool = app.ctx.pool
+    try:
+        app = request.app
+        pool = app.ctx.pool
 
-    user = request.ctx.user
+        user = request.ctx.user
+    
+        tripCtx = app.ctx.tripCtx
+        tripService = tripCtx['TripService']
+    
+        if tripid == None:
+            return sanjson(401, {"info": "Invalid operation. No trip id provided"})  # A tuple containing a status code and a message: (status, message)
+        pprint.pp(f'View trip id: {tripid}')
 
-    tripCtx = app.ctx.tripCtx
-    tripService = tripCtx['TripService']
-    
-    if tripid == None:
-        return sanjson(401, {"info": "Invalid operation. No trip id provided"})  # A tuple containing a status code and a message: (status, message)
-    pprint.pp(f'View trip id: {tripid}')
+        tripId = UUID(hex=tripid)
+        tripData = await tripService.fetch_trip(tripId)
+        if not tripData:
+            return sanjson(body={'info': 'Trip not found'})
 
-    tripId = UUID(hex=tripid)
-    tripData = await tripService.fetch_trip(tripId)
-    if not tripData:
-        return sanjson(body={'info': 'Trip not found'})
+        tripData = tripData.model_dump()
+        tripData['trip_id'] = tripData['trip_id'].hex
+        tripData['destination']['destination_id'] = tripData['destination']['destination_id'].hex
+        tripData['status'] = tripData['status'].value
+        tripData['date'] = tripData['date'].isoformat()
+    
+        if tripData['slots']:
+            for slot in tripData['slots']:
+                slot.pop('password')
+                slot['account_id'] = slot['account_id'].hex
+                slot['join_date'] = slot['join_date'].isoformat()
+    
+        # pprint.pp(f"Array of trips: {tripData}")
+        # passengers = 
+    
+        return sanjson(body={'data': tripData})
 
-    tripData = tripData.model_dump()
-    tripData['trip_id'] = tripData['trip_id'].hex
-    tripData['destination']['destination_id'] = tripData['destination']['destination_id'].hex
-    tripData['status'] = tripData['status'].value
-    tripData['date'] = tripData['date'].isoformat()
-    
-    if tripData['slots']:
-        for slot in tripData['slots']:
-            slot.pop('password')
-            slot['account_id'] = slot['account_id'].hex
-            slot['join_date'] = slot['join_date'].isoformat()
-    
-    # pprint.pp(f"Array of trips: {tripData}")
-    # passengers = 
-    
-    return sanjson(body={'data': tripData})
+    except Exception as e:
+        logger.error(traceback.format_exc(e))
+        return sanjson(status=500, body={'info': 'An error occurred'})
 
 
 async def trip_sse(request: Request, userid: str):
@@ -182,21 +198,20 @@ async def trip_sse(request: Request, userid: str):
             while True:
                 await stream.send(":\n\n")  # Keep-alive
                 await asyncio.sleep(15)  # Every 15 seconds
-        except asyncio.CancelledError:
+        except asyncio.CancelledError as e:
             await stream.eof()
-            logger.info("Client disconnected")
+            logger.exception("An error occurred")
         except Exception as e:
             await stream.eof()
-            logger.error(f"Unexpected error in SSE stream: {e}")
+            logger.exception("An error occurred")
         finally:
             await stream.eof()  # Ensure stream is closed
             sse_clients.discard(stream)
 
-        pprint(f'Publisher: {publisher}')
 
-    except Exception as e:
-        logger.error(f"Error in trip_sse: {e}")
-        raise e
+    except Exception:
+        logger.exceptas("An error occurred")
+        return sanjson(status=500, body={'info': 'An error occurred'})
 
 
 async def book(request: Request, tripid: str):
@@ -249,7 +264,8 @@ async def book(request: Request, tripid: str):
         user = await accountService.fetch_user(pool=pool, accountid=UUID(hex=booking_info['accountid']))
         if not user:
             return sanjson(status=403, body={'info': 'Forbidden'})
-
+        
+        # Initialize transaction
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {paystackConfig['SECRET_KEY']}"
@@ -282,7 +298,9 @@ async def book(request: Request, tripid: str):
         )
 
     except Exception as e:
-        raise e
+        logger.error(e)
+        error_logger.exception("An unexpected error occurred")
+        return sanjson(status=500, body={'info': 'An error occurred'})
 
 
 async def unbook(request: Request, tripid: str):
@@ -314,7 +332,8 @@ async def unbook(request: Request, tripid: str):
         return sanjson(status=200, body={'info': "Operation SUCCESS"})
 
     except Exception as e:
-        raise e
+        logger.error(traceback.format_exc(e))
+        return sanjson(status=500, body={'info': 'An error occurred'})
     
 
 async def payment_webhook(request: Request):
@@ -327,6 +346,9 @@ async def payment_webhook(request: Request):
 
         tripCtx = app,ctx.tripCtx
         tripService = tripCtx['TripService']
+
+        ticketCtx = app.ctx.ticketCtx
+        ticketStatus = ticketCtx['TicketStatus']
 
         payload = request.body  # Get data
         signature = request.headers.get('x-paystack-signature')
@@ -349,8 +371,10 @@ async def payment_webhook(request: Request):
 
         if event['event'] == "charge.success":
             pprint.pp(event)
+            await tripService.close_booking(pool=pool, status=ticketStatus.SUCCESS)
 
         return sanjson(status=200)
 
     except Exception as e:
-        raise e
+        logger.error(traceback.format_exc(e))
+        return sanjson(status=500, body={'info': 'An error occurred'})
