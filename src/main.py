@@ -83,13 +83,13 @@ def create_app() -> Sanic:
     """" Application factory """
 
     app = Sanic("Skrid")
+    Extend(app)
 
     app.ctx.CLIENT_URL = os.getenv("CLIENT_URL")
 
     app.config.CORS_ORIGINS = [app.ctx.CLIENT_URL]
     app.config.CORS_SUPPORTS_CREDENTIALS = True
     app.config.CORS_AUTOMATIC_OPTIONS = True
-    Extend(app)
 
     # Load encryption key
     app.ctx.ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY').encode()
