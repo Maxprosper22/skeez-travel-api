@@ -140,9 +140,10 @@ def create_app() -> Sanic:
 
         # Set up Scheduler
         # sqlalchemy_engine = create_async_engine(f"postgresql+asyncpg://{db_config['DB_USER']}:{db_config['DB_PASSWORD']}@{db_config['DB_HOST']}:{db_config['DB_PORT']}/{db_config['DB_NAME']}") # Create async SQLAlchemy engine
-
+        
+        redis_url = os.getenv("VALKEY_URL") or os.getenv("REDIS_URL")
         jobstore = {
-            'default': RedisJobStore(host=os.getenv("VALKEY_HOST"), port=os.getenv("VALKEY_PORT"), db=0)
+            'default': RedisJobStore(url=redis_url)
         }
         executors = {
             'default': ThreadPoolExecutor(20),
